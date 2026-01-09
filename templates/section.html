@@ -27,6 +27,8 @@
         </div>
         {% if post.description %}
         <p class="post-summary">{{ post.description }}</p>
+        {% elif post.extra.excerpt %}
+        <p class="post-summary">{{ post.extra.excerpt }}</p>
         {% elif post.summary %}
         <p class="post-summary">{{ post.summary | safe }}</p>
         {% endif %}

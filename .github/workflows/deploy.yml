@@ -6,7 +6,7 @@ on:
   push:
     branches: [main]
 
-  # Trigger from obsidian notes repo via repository_dispatch
+  # Trigger from obsidian repo via repository_dispatch
   repository_dispatch:
     types: [content-update]
 
@@ -31,23 +31,39 @@ jobs:
       - name: Checkout blog repository
         uses: actions/checkout@v4
 
-      - name: Checkout notes repository
+      - name: Checkout obsidian repository
         uses: actions/checkout@v4
         with:
-          repository: kcirtapfromspace/obsidian-notes
-          path: _notes
-          token: ${{ secrets.NOTES_REPO_TOKEN }}
-        continue-on-error: true  # Don't fail if notes repo doesn't exist yet
+          repository: kcirtapfromspace/obsidian
+          path: _obsidian
+          token: ${{ secrets.OBSIDIAN_REPO_TOKEN }}
 
-      - name: Sync posts from notes
+      - name: Sync content from obsidian
         run: |
-          if [ -d "_notes/posts" ]; then
-            echo "Syncing posts from notes repository..."
-            cp -r _notes/posts/* content/posts/ 2>/dev/null || true
+          echo "Syncing posts from obsidian repository..."
+
+          # Sync posts from the_archives/archives
+          if [ -d "_obsidian/the_archives/archives" ]; then
+            # Copy all markdown files and directories
+            for item in _obsidian/the_archives/archives/*; do
+              if [ -f "$item" ]; then
+                cp "$item" content/posts/
+              elif [ -d "$item" ]; then
+                cp -r "$item" content/posts/
+              fi
+            done
             echo "Posts synced successfully"
-          else
-            echo "No posts directory in notes repo, skipping sync"
           fi
+
+          # Sync about page if it exists
+          if [ -f "_obsidian/the_archives/about/index.md.md" ]; then
+            cp "_obsidian/the_archives/about/index.md.md" content/about_obsidian.md
+            echo "About page synced"
+          fi
+
+          # List synced content
+          echo "Content directory:"
+          ls -la content/posts/
 
       - name: Install Zola
         uses: taiki-e/install-action@v2
@@ -55,7 +71,12 @@ jobs:
           tool: zola@0.19.2
 
       - name: Build site
-        run: zola build
+        run: |
+          # Build, ignoring drafts by default
+          zola build
+        env:
+          # Set to "true" to include draft posts
+          ZOLA_DRAFTS: "false"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
