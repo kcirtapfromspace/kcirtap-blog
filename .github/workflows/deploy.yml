@@ -44,12 +44,16 @@ jobs:
 
           # Sync posts from the_archives/archives
           if [ -d "_obsidian/the_archives/archives" ]; then
-            # Copy all markdown files and directories
-            for item in _obsidian/the_archives/archives/*; do
-              if [ -f "$item" ]; then
-                cp "$item" content/posts/
-              elif [ -d "$item" ]; then
-                cp -r "$item" content/posts/
+            # Only copy markdown files that have YAML frontmatter (start with ---)
+            for file in _obsidian/the_archives/archives/*.md; do
+              if [ -f "$file" ]; then
+                # Check if file starts with frontmatter delimiter
+                if head -1 "$file" | grep -q "^---"; then
+                  cp "$file" content/posts/
+                  echo "Copied: $(basename $file)"
+                else
+                  echo "Skipped (no frontmatter): $(basename $file)"
+                fi
               fi
             done
             echo "Posts synced successfully"
