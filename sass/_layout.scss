@@ -1,0 +1,241 @@
+// Layout styles
+@use "variables" as *;
+
+// Container
+.container {
+  max-width: $max-width;
+  margin: 0 auto;
+  padding: 0 $spacing-md;
+
+  @media (min-width: $breakpoint-md) {
+    padding: 0 $spacing-lg;
+  }
+}
+
+// Header
+.header {
+  height: $header-height;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background-color: var(--bg);
+  z-index: 100;
+
+  .container {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.site-title {
+  font-size: $font-size-lg;
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--accent);
+    text-decoration: none;
+  }
+}
+
+.nav {
+  display: flex;
+  gap: $spacing-md;
+
+  @media (min-width: $breakpoint-md) {
+    gap: $spacing-lg;
+  }
+}
+
+.nav-link {
+  color: var(--text-secondary);
+  font-size: $font-size-sm;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--accent);
+  }
+
+  &.active {
+    color: var(--accent);
+  }
+}
+
+// Main content
+.main {
+  min-height: calc(100vh - #{$header-height} - 12rem);
+  padding: $spacing-xl 0;
+
+  @media (min-width: $breakpoint-md) {
+    padding: $spacing-2xl 0;
+  }
+}
+
+// Footer
+.footer {
+  border-top: 1px solid var(--border);
+  padding: $spacing-xl 0;
+  color: var(--muted);
+  font-size: $font-size-sm;
+
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $spacing-md;
+
+    @media (min-width: $breakpoint-md) {
+      flex-direction: row;
+      justify-content: space-between;
+    }
+  }
+}
+
+.social-links {
+  display: flex;
+  gap: $spacing-md;
+}
+
+.social-link {
+  color: var(--muted);
+  transition: color $transition-fast;
+
+  &:hover {
+    color: var(--accent);
+  }
+
+  svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    fill: currentColor;
+  }
+}
+
+// Post list
+.post-list {
+  list-style: none;
+  padding: 0;
+}
+
+.post-item {
+  margin-bottom: $spacing-xl;
+  padding-bottom: $spacing-xl;
+  border-bottom: 1px solid var(--border);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.post-title {
+  font-size: $font-size-xl;
+  margin: 0 0 $spacing-sm;
+
+  a {
+    color: var(--text);
+
+    &:hover {
+      color: var(--accent);
+    }
+  }
+}
+
+.post-meta {
+  color: var(--muted);
+  font-size: $font-size-sm;
+  margin-bottom: $spacing-sm;
+}
+
+.post-summary {
+  color: var(--text-secondary);
+}
+
+// Single post
+.post {
+  h1 {
+    margin-top: 0;
+  }
+}
+
+.post-header {
+  margin-bottom: $spacing-xl;
+}
+
+.post-date {
+  color: var(--muted);
+  font-size: $font-size-sm;
+}
+
+.post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  margin-top: $spacing-md;
+}
+
+.tag {
+  display: inline-block;
+  padding: $spacing-xs $spacing-sm;
+  background-color: var(--code-bg);
+  color: var(--text-secondary);
+  font-size: $font-size-sm;
+  border-radius: $radius-sm;
+  text-decoration: none;
+
+  &:hover {
+    background-color: var(--accent);
+    color: white;
+    text-decoration: none;
+  }
+}
+
+.post-content {
+  margin-bottom: $spacing-2xl;
+}
+
+.post-nav {
+  display: flex;
+  justify-content: space-between;
+  padding-top: $spacing-xl;
+  border-top: 1px solid var(--border);
+}
+
+// Tags page
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  list-style: none;
+  padding: 0;
+}
+
+.tag-count {
+  color: var(--muted);
+  font-size: $font-size-sm;
+}
+
+// Page intro
+.page-intro {
+  margin-bottom: $spacing-2xl;
+
+  h1 {
+    margin-top: 0;
+  }
+}
+
+// View all link
+.view-all {
+  display: inline-block;
+  margin-top: $spacing-md;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+// Reading time
+.reading-time {
+  color: var(--muted);
+  font-size: $font-size-sm;
+}

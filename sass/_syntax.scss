@@ -1,0 +1,56 @@
+// Syntax highlighting overrides
+// Zola uses highlight_theme from config, these are additional tweaks
+
+@use "variables" as *;
+
+// Line numbers
+pre code {
+  display: block;
+}
+
+.highlight {
+  position: relative;
+}
+
+// Copy button styling (if JS added later)
+.copy-code {
+  position: absolute;
+  top: $spacing-sm;
+  right: $spacing-sm;
+  padding: $spacing-xs $spacing-sm;
+  background-color: var(--border);
+  border: none;
+  border-radius: $radius-sm;
+  color: var(--text-secondary);
+  font-size: $font-size-sm;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity $transition-fast;
+
+  &:hover {
+    background-color: var(--accent);
+    color: white;
+  }
+}
+
+pre:hover .copy-code {
+  opacity: 1;
+}
+
+// Code block language label
+pre[data-lang]::before {
+  content: attr(data-lang);
+  position: absolute;
+  top: 0;
+  right: $spacing-md;
+  padding: $spacing-xs $spacing-sm;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+// Inline code in headings
+h1 code, h2 code, h3 code, h4 code {
+  font-size: 0.85em;
+}

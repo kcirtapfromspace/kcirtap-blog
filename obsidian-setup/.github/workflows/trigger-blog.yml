@@ -1,0 +1,21 @@
+# Trigger blog rebuild when posts are updated
+name: Trigger Blog Rebuild
+
+on:
+  push:
+    paths:
+      - 'posts/**'
+    branches:
+      - main
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger blog repository workflow
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.BLOG_REPO_TOKEN }}
+          repository: kcirtapfromspace/kcirtap-blog  # Update to your blog repo name
+          event-type: content-update
+          client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
