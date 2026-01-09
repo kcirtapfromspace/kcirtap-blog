@@ -1,0 +1,53 @@
+# Zola configuration for kcirtap.io
+# https://www.getzola.org/documentation/getting-started/configuration/
+
+base_url = "https://kcirtap.io"
+title = "escapades in engineering"
+description = "eventually correct with Patrick Deutsch"
+default_language = "en"
+compile_sass = true
+minify_html = true
+generate_feeds = true
+feed_filenames = ["rss.xml", "atom.xml"]
+
+# Taxonomies
+taxonomies = [
+    { name = "tags", feed = true },
+]
+
+# Syntax highlighting
+[markdown]
+highlight_code = true
+highlight_theme = "base16-ocean-dark"
+smart_punctuation = true
+
+[slugify]
+paths = "on"
+taxonomies = "on"
+anchors = "on"
+
+# Search (optional, can enable later)
+build_search_index = false
+
+[extra]
+# Site author
+author = "Patrick Deutsch"
+author_email = "patrickdeutsch@gmail.com"
+
+# Social links
+github = "https://github.com/kcirtapfromspace"
+linkedin = "https://linkedin.com/in/patrickdeutsch"
+mastodon = "https://data-folks.masto.host/@kcirtapfromspace"
+twitter = "https://twitter.com/kcirtapfromspace"
+kofi = "https://ko-fi.com/kcirtapfromspace"
+
+# Content settings
+posts_per_page = 10
+reading_speed = 200  # words per minute for reading time calculation
+
+# License
+license = "CC BY-NC 4.0"
+license_url = "https://creativecommons.org/licenses/by-nc/4.0/"
+
+# Notes repo for cross-repo sync (used by GitHub Actions)
+notes_repo = "kcirtapfromspace/obsidian-notes"

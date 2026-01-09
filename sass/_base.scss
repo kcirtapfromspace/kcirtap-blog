@@ -1,0 +1,160 @@
+// Base styles - reset and typography
+@use "variables" as *;
+
+// CSS Custom Properties (for dark mode switching)
+:root {
+  --bg: #{$bg-light};
+  --text: #{$text-light};
+  --text-secondary: #{$text-secondary-light};
+  --accent: #{$accent-light};
+  --accent-hover: #{$accent-hover-light};
+  --muted: #{$muted-light};
+  --border: #{$border-light};
+  --code-bg: #{$code-bg-light};
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #{$bg-dark};
+    --text: #{$text-dark};
+    --text-secondary: #{$text-secondary-dark};
+    --accent: #{$accent-dark};
+    --accent-hover: #{$accent-hover-dark};
+    --muted: #{$muted-dark};
+    --border: #{$border-dark};
+    --code-bg: #{$code-bg-dark};
+  }
+}
+
+// Reset
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+// Base
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: $font-sans;
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+  color: var(--text);
+  background-color: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Typography
+h1, h2, h3, h4, h5, h6 {
+  line-height: $line-height-tight;
+  font-weight: 600;
+  margin-top: $spacing-xl;
+  margin-bottom: $spacing-md;
+}
+
+h1 { font-size: $font-size-3xl; }
+h2 { font-size: $font-size-2xl; }
+h3 { font-size: $font-size-xl; }
+h4 { font-size: $font-size-lg; }
+
+p {
+  margin-bottom: $spacing-md;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: var(--accent-hover);
+    text-decoration: underline;
+  }
+}
+
+// Lists
+ul, ol {
+  margin-bottom: $spacing-md;
+  padding-left: $spacing-lg;
+}
+
+li {
+  margin-bottom: $spacing-xs;
+}
+
+// Code
+code {
+  font-family: $font-mono;
+  font-size: 0.9em;
+  background-color: var(--code-bg);
+  padding: 0.15em 0.35em;
+  border-radius: $radius-sm;
+}
+
+pre {
+  font-family: $font-mono;
+  font-size: $font-size-sm;
+  background-color: var(--code-bg);
+  padding: $spacing-md;
+  border-radius: $radius-md;
+  overflow-x: auto;
+  margin-bottom: $spacing-md;
+
+  code {
+    background: none;
+    padding: 0;
+    font-size: inherit;
+  }
+}
+
+// Blockquote
+blockquote {
+  border-left: 3px solid var(--accent);
+  padding-left: $spacing-md;
+  margin: $spacing-md 0;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+// Horizontal rule
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: $spacing-xl 0;
+}
+
+// Images
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: $radius-md;
+}
+
+// Tables
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: $spacing-md;
+}
+
+th, td {
+  padding: $spacing-sm $spacing-md;
+  border: 1px solid var(--border);
+  text-align: left;
+}
+
+th {
+  background-color: var(--code-bg);
+  font-weight: 600;
+}
+
+// Selection
+::selection {
+  background-color: var(--accent);
+  color: white;
+}

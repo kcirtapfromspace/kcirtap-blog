@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Posts tagged "{{ term.name }}" | {{ config.title }}{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <h1>Tagged: {{ term.name }}</h1>
+    <p>{{ term.pages | length }} post{% if term.pages | length != 1 %}s{% endif %} with this tag.</p>
+</div>
+
+<ul class="post-list">
+    {% for post in term.pages %}
+    <li class="post-item">
+        <h3 class="post-title">
+            <a href="{{ post.permalink }}">{{ post.title }}</a>
+        </h3>
+        <div class="post-meta">
+            <time datetime="{{ post.date | date(format='%Y-%m-%d') }}">
+                {{ post.date | date(format="%B %d, %Y") }}
+            </time>
+            {% if post.reading_time %}
+            <span class="reading-time">&middot; {{ post.reading_time }} min read</span>
+            {% endif %}
+        </div>
+        {% if post.description %}
+        <p class="post-summary">{{ post.description }}</p>
+        {% elif post.summary %}
+        <p class="post-summary">{{ post.summary | safe }}</p>
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>
+
+<a href="{{ get_url(path='tags') }}" class="view-all">&larr; All tags</a>
+{% endblock %}

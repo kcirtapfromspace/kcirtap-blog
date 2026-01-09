@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Tags | {{ config.title }}{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <h1>Tags</h1>
+    <p>Browse posts by topic.</p>
+</div>
+
+{% if terms %}
+<ul class="tags-list">
+    {% for term in terms %}
+    <li>
+        <a href="{{ term.permalink }}" class="tag">
+            {{ term.name }} <span class="tag-count">({{ term.pages | length }})</span>
+        </a>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No tags yet.</p>
+{% endif %}
+{% endblock %}

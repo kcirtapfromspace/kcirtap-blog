@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-intro">
+    {{ section.content | safe }}
+</div>
+
+<h2>Recent Posts</h2>
+
+{% set posts_section = get_section(path="posts/_index.md") %}
+{% set recent_posts = posts_section.pages | slice(end=config.extra.posts_per_page) %}
+
+{% if recent_posts %}
+<ul class="post-list">
+    {% for post in recent_posts %}
+    <li class="post-item">
+        <h3 class="post-title">
+            <a href="{{ post.permalink }}">{{ post.title }}</a>
+        </h3>
+        <div class="post-meta">
+            <time datetime="{{ post.date | date(format='%Y-%m-%d') }}">
+                {{ post.date | date(format="%B %d, %Y") }}
+            </time>
+            {% if post.reading_time %}
+            <span class="reading-time">&middot; {{ post.reading_time }} min read</span>
+            {% endif %}
+        </div>
+        {% if post.description %}
+        <p class="post-summary">{{ post.description }}</p>
+        {% elif post.summary %}
+        <p class="post-summary">{{ post.summary | safe }}</p>
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>
+
+<a href="{{ get_url(path='@/posts/_index.md') }}" class="view-all">View all posts &rarr;</a>
+{% else %}
+<p>No posts yet. Check back soon!</p>
+{% endif %}
+{% endblock %}
