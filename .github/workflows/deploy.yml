@@ -55,12 +55,6 @@ jobs:
             echo "Posts synced successfully"
           fi
 
-          # Sync about page if it exists
-          if [ -f "_obsidian/the_archives/about/index.md.md" ]; then
-            cp "_obsidian/the_archives/about/index.md.md" content/about_obsidian.md
-            echo "About page synced"
-          fi
-
           # List synced content
           echo "Content directory:"
           ls -la content/posts/
