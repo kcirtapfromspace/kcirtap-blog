@@ -44,15 +44,31 @@ jobs:
 
           # Sync posts from the_archives/archives
           if [ -d "_obsidian/the_archives/archives" ]; then
-            # Only copy markdown files that have YAML frontmatter (start with ---)
+            # Copy standalone markdown files with frontmatter
             for file in _obsidian/the_archives/archives/*.md; do
               if [ -f "$file" ]; then
-                # Check if file starts with frontmatter delimiter
                 if head -1 "$file" | grep -q "^---"; then
                   cp "$file" content/posts/
-                  echo "Copied: $(basename $file)"
+                  echo "Copied file: $(basename $file)"
                 else
                   echo "Skipped (no frontmatter): $(basename $file)"
+                fi
+              fi
+            done
+
+            # Copy folders with index.md that has frontmatter (page bundles)
+            for dir in _obsidian/the_archives/archives/*/; do
+              if [ -d "$dir" ]; then
+                dirname=$(basename "$dir")
+                if [ -f "${dir}index.md" ]; then
+                  if head -1 "${dir}index.md" | grep -q "^---"; then
+                    cp -r "$dir" "content/posts/$dirname"
+                    echo "Copied folder: $dirname"
+                  else
+                    echo "Skipped folder (no frontmatter): $dirname"
+                  fi
+                else
+                  echo "Skipped folder (no index.md): $dirname"
                 fi
               fi
             done
