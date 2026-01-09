@@ -1,7 +1,8 @@
 # Zola configuration for kcirtap.io
 # https://www.getzola.org/documentation/getting-started/configuration/
 
-base_url = "https://kcirtap.io"
+# Use GitHub Pages URL for now (switch to kcirtap.io when ready)
+base_url = "https://kcirtapfromspace.github.io/kcirtap-blog"
 title = "escapades in engineering"
 description = "eventually correct with Patrick Deutsch"
 default_language = "en"
@@ -13,6 +14,7 @@ feed_filenames = ["rss.xml", "atom.xml"]
 # Taxonomies
 taxonomies = [
     { name = "tags", feed = true },
+    { name = "categories", feed = true },
 ]
 
 # Syntax highlighting
@@ -50,4 +52,4 @@ license = "CC BY-NC 4.0"
 license_url = "https://creativecommons.org/licenses/by-nc/4.0/"
 
 # Notes repo for cross-repo sync (used by GitHub Actions)
-notes_repo = "kcirtapfromspace/obsidian-notes"
+notes_repo = "kcirtapfromspace/obsidian"

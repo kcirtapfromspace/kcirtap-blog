@@ -1,18 +1,15 @@
 {% extends "base.html" %}
 
+{% block title %}Posts in "{{ term.name }}" | {{ config.title }}{% endblock %}
+
 {% block content %}
 <div class="page-intro">
-    {{ section.content | safe }}
+    <h1>Category: {{ term.name }}</h1>
+    <p>{{ term.pages | length }} post{% if term.pages | length != 1 %}s{% endif %} in this category.</p>
 </div>
 
-<h2>Recent Posts</h2>
-
-{% set posts_section = get_section(path="posts/_index.md") %}
-{% set recent_posts = posts_section.pages | slice(end=config.extra.posts_per_page) %}
-
-{% if recent_posts %}
 <ul class="post-list">
-    {% for post in recent_posts %}
+    {% for post in term.pages %}
     <li class="post-item">
         <h3 class="post-title">
             <a href="{{ post.permalink }}">{{ post.title }}</a>
@@ -36,8 +33,5 @@
     {% endfor %}
 </ul>
 
-<a href="{{ get_url(path='@/posts/_index.md') }}" class="view-all">View all posts &rarr;</a>
-{% else %}
-<p>No posts yet. Check back soon!</p>
-{% endif %}
+<a href="{{ get_url(path='categories') }}" class="view-all">&larr; All categories</a>
 {% endblock %}

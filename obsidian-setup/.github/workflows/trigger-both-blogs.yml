@@ -1,0 +1,43 @@
+# Trigger both Hugo and Zola blog rebuilds when content changes
+name: Trigger Blog Updates
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'the_archives/**'
+
+jobs:
+  trigger_hugo:
+    name: Trigger Hugo Blog (kcirtap.io)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the source repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Trigger Hugo blog rebuild
+        run: |
+          git config --global user.email "github-actions@example.com"
+          git config --global user.name "GitHub Actions"
+          git clone "https://${{ secrets.PAT }}@github.com/kcirtapfromspace/kcirtap.io.git"
+          cd kcirtap.io
+          git checkout main
+          git commit --allow-empty -m "docs: Obsidian sync - ref: ${{ github.ref }}, sha: ${{ github.sha }}"
+          git push
+
+  trigger_zola:
+    name: Trigger Zola Blog (kcirtap-blog)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Zola blog workflow
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.PAT }}" \
+            https://api.github.com/repos/kcirtapfromspace/kcirtap-blog/dispatches \
+            -d '{"event_type":"content-update","client_payload":{"ref":"${{ github.ref }}","sha":"${{ github.sha }}"}}'
+        # Alternative: Use workflow_dispatch instead
+        # gh workflow run deploy.yml --repo kcirtapfromspace/kcirtap-blog
