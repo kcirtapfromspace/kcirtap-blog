@@ -10,9 +10,10 @@
     {% endif %}
 </div>
 
-{% if section.pages %}
+{% set page_list = paginator.pages | default(value=section.pages) %}
+{% if page_list %}
 <ul class="post-list">
-    {% for post in section.pages %}
+    {% for post in page_list %}
     <li class="post-item">
         <h3 class="post-title">
             <a href="{{ post.permalink }}">{{ post.title }}</a>
