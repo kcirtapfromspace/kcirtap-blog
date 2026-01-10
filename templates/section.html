@@ -19,11 +19,13 @@
             <a href="{{ post.permalink }}">{{ post.title }}</a>
         </h3>
         <div class="post-meta">
+            {% if post.date %}
             <time datetime="{{ post.date | date(format='%Y-%m-%d') }}">
                 {{ post.date | date(format="%B %d, %Y") }}
             </time>
+            {% endif %}
             {% if post.reading_time %}
-            <span class="reading-time">&middot; {{ post.reading_time }} min read</span>
+            <span class="reading-time">{% if post.date %}&middot; {% endif %}{{ post.reading_time }} min read</span>
             {% endif %}
         </div>
         {% if post.description %}
