@@ -1,86 +1,133 @@
 #!/usr/bin/env python3
-"""Convert Hugo-style frontmatter to Zola format.
+"""
+Convert Hugo-style YAML frontmatter to Zola-compatible format.
 
-This script converts root-level tags/categories to Zola's taxonomies: format.
+Hugo uses root-level tags/categories:
+---
+tags:
+  - python
+  - rust
+categories:
+  - programming
+---
+
+Zola expects them under taxonomies:
+---
+taxonomies:
+  tags:
+    - python
+    - rust
+  categories:
+    - programming
+---
+
+This script converts the format in-place for all markdown files in a directory.
 """
 
-import sys
-import re
 import os
+import re
+import sys
 from pathlib import Path
 
 
 def convert_frontmatter(content: str) -> str:
-    """Convert Hugo frontmatter to Zola format."""
-    # Check if file has YAML frontmatter
+    """Convert Hugo-style frontmatter to Zola-compatible format."""
+
+    # Check if file starts with YAML frontmatter
     if not content.startswith('---'):
         return content
 
-    # Split frontmatter from content
-    parts = content.split('---', 2)
-    if len(parts) < 3:
+    # Find the end of frontmatter
+    second_delimiter = content.find('---', 3)
+    if second_delimiter == -1:
         return content
 
-    frontmatter = parts[1]
-    body = parts[2]
+    frontmatter = content[3:second_delimiter]
+    body = content[second_delimiter + 3:]
 
-    # Check if taxonomies already exists
+    # Check if already has taxonomies section
     if 'taxonomies:' in frontmatter:
         return content
 
     # Extract tags and categories from root level
-    tags_match = re.search(r'^tags:\s*\n((?:\s+-\s+.+\n?)+)', frontmatter, re.MULTILINE)
-    categories_match = re.search(r'^categories:\s*\n((?:\s+-\s+.+\n?)+)', frontmatter, re.MULTILINE)
+    tags_match = re.search(r'^tags:\s*\n((?:\s+-\s+.+\n)*)', frontmatter, re.MULTILINE)
+    tags_inline_match = re.search(r'^tags:\s*\[([^\]]*)\]', frontmatter, re.MULTILINE)
+    categories_match = re.search(r'^categories:\s*\n((?:\s+-\s+.+\n)*)', frontmatter, re.MULTILINE)
+    categories_inline_match = re.search(r'^categories:\s*\[([^\]]*)\]', frontmatter, re.MULTILINE)
 
-    tags = []
-    categories = []
+    tags = None
+    categories = None
 
+    # Parse tags (list format)
     if tags_match:
         tag_lines = tags_match.group(1)
-        tags = list(set(re.findall(r'-\s+(.+)', tag_lines)))  # Use set to deduplicate
-        # Remove original tags block
-        frontmatter = re.sub(r'^tags:\s*\n(?:\s+-\s+.+\n?)+', '', frontmatter, flags=re.MULTILINE)
+        tags = re.findall(r'-\s+["\']?([^"\'\n]+)["\']?', tag_lines)
+        tags = [t.strip() for t in tags]
+        # Remove original tags section
+        frontmatter = frontmatter[:tags_match.start()] + frontmatter[tags_match.end():]
 
+    # Parse tags (inline format like [tag1, tag2])
+    elif tags_inline_match:
+        tags_str = tags_inline_match.group(1)
+        if tags_str.strip():
+            tags = [t.strip().strip('"\'') for t in tags_str.split(',')]
+            tags = [t for t in tags if t]
+        # Remove original tags line
+        frontmatter = frontmatter[:tags_inline_match.start()] + frontmatter[tags_inline_match.end():]
+
+    # Parse categories (list format)
     if categories_match:
         cat_lines = categories_match.group(1)
-        categories = list(set(re.findall(r'-\s+(.+)', cat_lines)))  # Use set to deduplicate
-        # Remove original categories block
-        frontmatter = re.sub(r'^categories:\s*\n(?:\s+-\s+.+\n?)+', '', frontmatter, flags=re.MULTILINE)
+        categories = re.findall(r'-\s+["\']?([^"\'\n]+)["\']?', cat_lines)
+        categories = [c.strip() for c in categories]
+        # Remove original categories section
+        frontmatter = frontmatter[:categories_match.start()] + frontmatter[categories_match.end():]
 
-    # Build taxonomies section if we have tags or categories
+    # Parse categories (inline format)
+    elif categories_inline_match:
+        cats_str = categories_inline_match.group(1)
+        if cats_str.strip():
+            categories = [c.strip().strip('"\'') for c in cats_str.split(',')]
+            categories = [c for c in categories if c]
+        # Remove original categories line
+        frontmatter = frontmatter[:categories_inline_match.start()] + frontmatter[categories_inline_match.end():]
+
+    # If we found tags or categories, add taxonomies section
     if tags or categories:
+        # Clean up any extra blank lines
+        frontmatter = re.sub(r'\n{3,}', '\n\n', frontmatter)
+
+        # Build taxonomies section
         taxonomies = '\ntaxonomies:\n'
         if tags:
             taxonomies += '  tags:\n'
-            for tag in sorted(tags):
-                taxonomies += f'    - {tag}\n'
+            for tag in tags:
+                taxonomies += f'    - "{tag}"\n'
         if categories:
             taxonomies += '  categories:\n'
-            for cat in sorted(categories):
-                taxonomies += f'    - {cat}\n'
+            for cat in categories:
+                taxonomies += f'    - "{cat}"\n'
 
-        # Add taxonomies before the closing ---
+        # Add taxonomies before end of frontmatter
         frontmatter = frontmatter.rstrip() + taxonomies
 
-    # Reconstruct the file
     return '---' + frontmatter + '---' + body
 
 
-def process_file(filepath: Path) -> None:
-    """Process a single markdown file."""
-    print(f"Processing: {filepath}")
+def process_file(file_path: Path) -> bool:
+    """Process a single markdown file. Returns True if modified."""
+    try:
+        content = file_path.read_text(encoding='utf-8')
+        converted = convert_frontmatter(content)
 
-    with open(filepath, 'r', encoding='utf-8') as f:
-        content = f.read()
-
-    new_content = convert_frontmatter(content)
-
-    if new_content != content:
-        with open(filepath, 'w', encoding='utf-8') as f:
-            f.write(new_content)
-        print(f"  Converted: {filepath}")
-    else:
-        print(f"  No changes: {filepath}")
+        if converted != content:
+            file_path.write_text(converted, encoding='utf-8')
+            print(f"Converted: {file_path}")
+            return True
+        return False
+    except Exception as e:
+        print(f"Error processing {file_path}: {e}", file=sys.stderr)
+        return False
 
 
 def main():
@@ -89,20 +136,19 @@ def main():
         sys.exit(1)
 
     directory = Path(sys.argv[1])
-
-    if not directory.exists():
-        print(f"Directory not found: {directory}")
+    if not directory.is_dir():
+        print(f"Error: {directory} is not a directory", file=sys.stderr)
         sys.exit(1)
 
-    # Find all markdown files
-    md_files = list(directory.rglob("*.md"))
-    print(f"Found {len(md_files)} markdown files")
+    modified_count = 0
 
-    for filepath in md_files:
-        process_file(filepath)
+    # Process all .md files recursively
+    for md_file in directory.rglob('*.md'):
+        if process_file(md_file):
+            modified_count += 1
 
-    print("Frontmatter conversion complete")
+    print(f"Converted {modified_count} files")
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

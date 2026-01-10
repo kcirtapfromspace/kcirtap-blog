@@ -51,14 +51,15 @@ body {
 
 // Typography
 h1, h2, h3, h4, h5, h6 {
+  font-family: $font-heading;
   line-height: $line-height-tight;
   font-weight: 600;
   margin-top: $spacing-xl;
   margin-bottom: $spacing-md;
 }
 
-h1 { font-size: $font-size-3xl; }
-h2 { font-size: $font-size-2xl; }
+h1 { font-size: $font-size-3xl; font-weight: 700; }
+h2 { font-size: $font-size-2xl; font-weight: 700; }
 h3 { font-size: $font-size-xl; }
 h4 { font-size: $font-size-lg; }
 

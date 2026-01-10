@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <path d="M44 132h168c8 0 14 6 14 14v28c0 20-16 36-36 36H66c-20 0-36-16-36-36v-28c0-8 6-14 14-14z"
+        fill="#E23A2E" stroke="#111111" stroke-width="10" stroke-linejoin="round"/>
+  <path d="M58 132c0 18 16 32 36 32h68c20 0 36-14 36-32"
+        stroke="#111111" stroke-width="10" stroke-linecap="round" fill="none"/>
+  <path d="M70 124c0-46 28-78 58-78s58 32 58 78"
+        stroke="#111111" stroke-width="12" stroke-linecap="round" fill="none"/>
+
+  <!-- Name label -->
+  <rect x="118" y="158" rx="4" ry="4" width="92" height="26" fill="#111111"/>
+  <text x="124" y="176"
+        font-family="Inter, system-ui, sans-serif"
+        font-size="12"
+        font-weight="600"
+        fill="#F2E6D8">
+    Patrick Deutsch
+  </text>
+</svg>
