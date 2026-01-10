@@ -79,6 +79,99 @@ jobs:
           echo "Content directory:"
           ls -la content/posts/
 
+      - name: Convert frontmatter for Zola compatibility
+        run: |
+          echo "Converting Hugo-style frontmatter to Zola format..."
+
+          # Process all markdown files in content/posts
+          find content/posts -name "*.md" -type f | while read file; do
+            echo "Processing: $file"
+
+            # Create temp file
+            temp_file=$(mktemp)
+
+            # Use Python to convert frontmatter
+            python3 << 'PYTHON_SCRIPT' "$file" "$temp_file"
+import sys
+import re
+
+input_file = sys.argv[1]
+output_file = sys.argv[2]
+
+with open(input_file, 'r', encoding='utf-8') as f:
+    content = f.read()
+
+# Check if file has YAML frontmatter
+if not content.startswith('---'):
+    # No frontmatter, copy as-is
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write(content)
+    sys.exit(0)
+
+# Split frontmatter from content
+parts = content.split('---', 2)
+if len(parts) < 3:
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write(content)
+    sys.exit(0)
+
+frontmatter = parts[1]
+body = parts[2]
+
+# Check if taxonomies already exists
+if 'taxonomies:' in frontmatter:
+    # Already converted, just clean up duplicate tags if present
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write(content)
+    sys.exit(0)
+
+# Extract tags and categories from root level
+tags_match = re.search(r'^tags:\s*\n((?:\s+-\s+.+\n?)+)', frontmatter, re.MULTILINE)
+categories_match = re.search(r'^categories:\s*\n((?:\s+-\s+.+\n?)+)', frontmatter, re.MULTILINE)
+
+tags = []
+categories = []
+
+if tags_match:
+    tag_lines = tags_match.group(1)
+    tags = list(set(re.findall(r'-\s+(.+)', tag_lines)))  # Use set to deduplicate
+    # Remove original tags block
+    frontmatter = re.sub(r'^tags:\s*\n(?:\s+-\s+.+\n?)+', '', frontmatter, flags=re.MULTILINE)
+
+if categories_match:
+    cat_lines = categories_match.group(1)
+    categories = list(set(re.findall(r'-\s+(.+)', cat_lines)))  # Use set to deduplicate
+    # Remove original categories block
+    frontmatter = re.sub(r'^categories:\s*\n(?:\s+-\s+.+\n?)+', '', frontmatter, flags=re.MULTILINE)
+
+# Build taxonomies section if we have tags or categories
+if tags or categories:
+    taxonomies = '\ntaxonomies:\n'
+    if tags:
+        taxonomies += '  tags:\n'
+        for tag in sorted(tags):
+            taxonomies += f'    - {tag}\n'
+    if categories:
+        taxonomies += '  categories:\n'
+        for cat in sorted(categories):
+            taxonomies += f'    - {cat}\n'
+
+    # Add taxonomies before the closing ---
+    frontmatter = frontmatter.rstrip() + taxonomies
+
+# Reconstruct the file
+new_content = '---' + frontmatter + '---' + body
+
+with open(output_file, 'w', encoding='utf-8') as f:
+    f.write(new_content)
+PYTHON_SCRIPT
+
+            # Replace original with converted
+            mv "$temp_file" "$file"
+          done
+
+          echo "Frontmatter conversion complete"
+
       - name: Install Zola
         uses: taiki-e/install-action@v2
         with:
