@@ -94,5 +94,23 @@
             </div>
         </div>
     </footer>
+
+    <!-- Mermaid.js for diagrams -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default'
+        });
+        // Find all mermaid code blocks and render them
+        document.querySelectorAll('pre code.language-mermaid').forEach((block) => {
+            const pre = block.parentElement;
+            const container = document.createElement('div');
+            container.className = 'mermaid';
+            container.textContent = block.textContent;
+            pre.parentNode.replaceChild(container, pre);
+        });
+        mermaid.run();
+    </script>
 </body>
 </html>
