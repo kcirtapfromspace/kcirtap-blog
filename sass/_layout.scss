@@ -30,6 +30,9 @@
 }
 
 .site-title {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
   font-size: $font-size-lg;
   font-weight: 600;
   color: var(--text);
@@ -39,6 +42,11 @@
     color: var(--accent);
     text-decoration: none;
   }
+}
+
+.site-logo {
+  width: 2rem;
+  height: 2rem;
 }
 
 .nav {
