@@ -22,11 +22,18 @@
     <link rel="alternate" type="application/rss+xml" title="RSS Feed" href="{{ get_url(path='rss.xml') }}">
     <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="{{ get_url(path='atom.xml') }}">
 
+    <!-- Fonts: Space Grotesk for headings, Inter for body -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+
     <!-- Styles -->
     <link rel="stylesheet" href="{{ get_url(path='style.css') }}">
 
-    <!-- Favicon -->
-    <link rel="icon" href="{{ get_url(path='favicon.ico') }}" type="image/x-icon">
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ get_url(path='icon-32.png') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ get_url(path='icon-192.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ get_url(path='icon-180.png') }}">
 
     {% block head_extra %}{% endblock %}
 </head>
