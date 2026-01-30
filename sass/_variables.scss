@@ -1,18 +1,20 @@
 // Design tokens for kcirtap.io
 // Based on Patrick Deutsch brand kit
 
-// Brand Colors
-$waffle-red: #E23A2E;
+// Brand Colors - Beanie Kit
+$beanie-coral: #D94E41;      // Primary coral red from beanie
+$beanie-deep: #B8423A;       // Darker shade for hover
 $ink-black: #111111;
-$warm-canvas: #F2E6D8;
+$warm-canvas: #F5EDE4;       // Warm cream background
+$wood-tone: #C4A882;         // Accent from desk
 $slate: #2B2D33;
 
 // Colors - Light mode
 $bg-light: #fafafa;
 $text-light: $ink-black;
 $text-secondary-light: #4a4a4a;
-$accent-light: $waffle-red;
-$accent-hover-light: darken($waffle-red, 10%);
+$accent-light: $beanie-coral;
+$accent-hover-light: darken($beanie-coral, 10%);
 $muted-light: #6b7280;
 $border-light: #e5e7eb;
 $code-bg-light: #f3f4f6;
@@ -21,8 +23,8 @@ $code-bg-light: #f3f4f6;
 $bg-dark: $ink-black;
 $text-dark: $warm-canvas;
 $text-secondary-dark: #b3b3b3;
-$accent-dark: lighten($waffle-red, 10%);
-$accent-hover-dark: lighten($waffle-red, 20%);
+$accent-dark: lighten($beanie-coral, 10%);
+$accent-hover-dark: lighten($beanie-coral, 20%);
 $muted-dark: #9ca3af;
 $border-dark: $slate;
 $code-bg-dark: $slate;
@@ -53,7 +55,7 @@ $spacing-3xl: 4rem;
 
 // Layout
 $max-width: 48rem;
-$header-height: 4rem;
+$header-height: 8rem;
 
 // Breakpoints
 $breakpoint-sm: 640px;

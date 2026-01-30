@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Resume - {{ config.extra.author }}{% endblock %}
+
+{% block head_extra %}
+<style>
+    .resume-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .resume-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    .resume-download {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .resume-btn {
+        padding: 0.5rem 1rem;
+        background: var(--accent);
+        color: white;
+        text-decoration: none;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    .resume-btn:hover {
+        opacity: 0.9;
+        text-decoration: none;
+        color: white;
+    }
+    .resume-btn.secondary {
+        background: var(--code-bg);
+        color: var(--text);
+        border: 1px solid var(--border);
+    }
+    .resume-content h1 {
+        font-size: 1.5rem;
+        border-bottom: 2px solid var(--accent);
+        padding-bottom: 0.5rem;
+        margin-top: 2rem;
+    }
+    .resume-content h1:first-child {
+        margin-top: 0;
+    }
+    .resume-content h2 {
+        font-size: 1.125rem;
+        margin-top: 1.5rem;
+    }
+    .resume-content ul {
+        margin: 0.5rem 0;
+        padding-left: 1.25rem;
+    }
+    .resume-content li {
+        margin: 0.375rem 0;
+    }
+    .resume-content p {
+        margin: 0.25rem 0;
+    }
+    .contact-info {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        font-size: 0.875rem;
+    }
+    .contact-info a {
+        color: var(--accent);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="resume-container">
+    <div class="resume-header">
+        <h1 style="margin: 0;">{{ config.extra.author }}</h1>
+        <div class="resume-download">
+            <a href="/resume/cv.pdf" class="resume-btn" download>Download PDF</a>
+            <a href="/resume/cv.html" class="resume-btn secondary" target="_blank">View HTML</a>
+        </div>
+    </div>
+
+    <div class="contact-info">
+        <span>Denver, CO</span>
+        <a href="mailto:{{ config.extra.author_email }}">{{ config.extra.author_email }}</a>
+        <a href="{{ config.extra.linkedin }}" target="_blank">LinkedIn</a>
+        <a href="{{ config.extra.github }}" target="_blank">GitHub</a>
+    </div>
+
+    <div class="resume-content">
+        <h1>Summary</h1>
+        <p>Staff Data Architect with 10+ years building production data platforms at scale. Architected systems serving 100M+ users across federal agencies (VA, HHS, CMS). Expert in Kubernetes workflow orchestration, streaming architectures (Kafka, Kinesis), and data lakehouse design. Led data migrations processing 100K+ records with zero downtime. Track record reducing infrastructure costs 30-50% while standardizing observability (DORA metrics, Four Golden Signals) across 40+ engineering teams.</p>
+
+        <h1>Skills</h1>
+        <p><strong>Distributed Systems:</strong> Kafka, Kinesis, Debezium CDC, Argo Workflows, Apache Spark, Real-time Streaming</p>
+        <p><strong>Data Platforms:</strong> AWS (Redshift, Lake Formation, Glue, Step Functions), DuckDB, PostgreSQL, Parquet, Iceberg</p>
+        <p><strong>Infrastructure:</strong> Kubernetes, Docker, Helm, Terraform, CloudFormation, GitHub Actions CI/CD</p>
+        <p><strong>Observability:</strong> Datadog, Prometheus, Grafana, OpenTelemetry, DORA Metrics, Four Golden Signals</p>
+        <p><strong>Languages:</strong> Python, Go, SQL, Java, Bash</p>
+        <p><strong>Data Quality:</strong> dbt, Great Expectations, Deequ, Schema Validation, Data Contracts</p>
+
+        <h1>Experience</h1>
+
+        <h2><strong>Ad Hoc LLC</strong> — Staff Data Architect</h2>
+        <p><em>Remote | Jan 2022 – Present</em></p>
+        <ul>
+            <li>Architected unified observability platform for VA.gov serving 18M+ veterans; aggregated Datadog, GitHub, Slack, and PagerDuty alerts into centralized incident management; led 4-person team standardizing DORA metrics across 40+ teams</li>
+            <li>Led mainframe-to-cloud payroll migration for Colorado state government processing 100K+ employee records; designed idempotent ELT with dbt/DuckDB achieving sub-hour refresh latency; reduced infrastructure costs 30%</li>
+            <li>Built production BERT inference pipeline for HHS Head Start ($15.8B program) semantic deduplication; achieved sub-200ms latency in resource-constrained Cloud Foundry (2GB) via lazy loading and batch vectorization</li>
+            <li>Designed real-time eCR ingestion pipeline (HL7, FHIR) processing 50K+ events/day with NLP enrichment (AWS Comprehend Medical) and identity resolution</li>
+        </ul>
+
+        <h2><strong>Workiva</strong> — Senior Data Infrastructure Engineer</h2>
+        <p><em>Remote | Jan 2019 – Jan 2022</em></p>
+        <ul>
+            <li>Architected enterprise Argo Workflows platform on Kubernetes with Helm charts, Aurora PostgreSQL (multi-AZ), S3 with KMS encryption, and Okta SSO; reduced pipeline deployment time from days to hours</li>
+            <li>Pioneered Data Mesh architecture using AWS Lake Formation with cell-level RBAC enabling 200+ analysts self-service access to domain-specific data products</li>
+            <li>Implemented Apache Hudi proof-of-concept for Change Data Capture, laying foundation for real-time analytics capabilities</li>
+            <li>Drove Splunk SmartStore adoption achieving 50% cost reduction and 20% query performance improvement; established data quality practices with Great Expectations</li>
+        </ul>
+
+        <h2><strong>Vail Resorts</strong> — IT Infrastructure Analyst</h2>
+        <p><em>Broomfield, CO | Jan 2015 – Jan 2019</em></p>
+        <ul>
+            <li>Managed infrastructure for $300M eCommerce platform (IIS, MSSQL, F5, VMware)</li>
+            <li>Built Splunk-based real-time monitoring; maintained PCI compliance through security migrations</li>
+            <li>Ensured platform reliability during peak seasons handling millions of concurrent users</li>
+        </ul>
+
+        <h2><strong>Amazon</strong> — IT Support Technician</h2>
+        <p><em>Pennsylvania | Jan 2010 – Jan 2014</em></p>
+        <ul>
+            <li>Interim IT Project Manager for $5M fulfillment center expansion (800K sqft), launching on schedule</li>
+            <li>Deployed facility-wide infrastructure including 1,000+ cameras, 100 switches, 50 servers</li>
+        </ul>
+
+        <h1>Projects</h1>
+        <h2><strong>CDC Lakehouse Demo</strong></h2>
+        <p><em>Jan 2023 – Present</em> | <a href="https://github.com/kcirtapfromspace/database_thing" target="_blank">GitHub</a></p>
+        <ul>
+            <li>Built complete CDC pipeline from PostgreSQL through Debezium, Kafka, Parquet to dbt/DuckDB analytics layer</li>
+            <li>Implemented Argo Workflows orchestration on Kubernetes with Great Expectations data quality validation</li>
+            <li>Demonstrates production patterns for streaming ingestion, batch transformation, and analytics serving</li>
+        </ul>
+
+        <h1>Education</h1>
+        <h2><strong>The Pennsylvania State University</strong></h2>
+        <p>BS, Information Sciences and Technology — May 2016</p>
+
+        <h1>Certifications</h1>
+        <ul>
+            <li>AWS Certified Solutions Architect - Associate (2019)</li>
+            <li>AWS Certified Data Analytics - Specialty (2023)</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

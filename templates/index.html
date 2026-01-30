@@ -1,43 +1,140 @@
 {% extends "base.html" %}
 
+{% block head_extra %}
+<style>
+    .main {
+        min-height: calc(100vh - 4rem - 6rem);
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .main .container {
+        width: 100%;
+        max-width: none;
+        padding: 0;
+    }
+    .sudoku-page {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: calc(100vh - 4rem - 6rem);
+        padding: 1rem;
+    }
+    .sudoku-controls {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+    .sudoku-btn {
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+        font-family: inherit;
+        background: var(--bg);
+        color: var(--text);
+        border: 2px solid var(--border);
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: all 150ms ease;
+    }
+    .sudoku-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+    #sudoku-canvas {
+        display: block;
+        border-radius: 0.5rem;
+    }
+    .sudoku-help {
+        margin-top: 1rem;
+        font-size: 0.75rem;
+        color: var(--muted);
+        text-align: center;
+    }
+    .sudoku-help kbd {
+        padding: 0.125rem 0.375rem;
+        background: var(--code-bg);
+        border: 1px solid var(--border);
+        border-radius: 0.25rem;
+        font-family: monospace;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="page-intro">
-    {{ section.content | safe }}
+<div class="sudoku-page">
+    <div class="sudoku-controls">
+        <select id="difficulty-select" class="sudoku-btn">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+            <option value="expert">Expert</option>
+        </select>
+        <button id="new-game-btn" class="sudoku-btn">New Game</button>
+        <button id="theme-btn" class="sudoku-btn">Theme</button>
+    </div>
+
+    <canvas id="sudoku-canvas"></canvas>
+
+    <p class="sudoku-help">
+        <kbd>↑↓←→</kbd> or <kbd>HJKL</kbd> move &bull;
+        <kbd>1-9</kbd> fill &bull;
+        <kbd>Space</kbd> notes &bull;
+        <kbd>U</kbd> undo &bull;
+        <kbd>P</kbd> pause
+    </p>
 </div>
 
-<h2>Recent Posts</h2>
+<script type="module">
+    import init, { SudokuGame } from '/sudoku/sudoku_wasm.js';
 
-{% set posts_section = get_section(path="posts/_index.md") %}
-{% set recent_posts = posts_section.pages | slice(end=config.extra.posts_per_page) %}
+    let game = null;
+    let currentTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 
-{% if recent_posts %}
-<ul class="post-list">
-    {% for post in recent_posts %}
-    <li class="post-item">
-        <h3 class="post-title">
-            <a href="{{ post.permalink }}">{{ post.title }}</a>
-        </h3>
-        <div class="post-meta">
-            <time datetime="{{ post.date | date(format='%Y-%m-%d') }}">
-                {{ post.date | date(format="%B %d, %Y") }}
-            </time>
-            {% if post.reading_time %}
-            <span class="reading-time">&middot; {{ post.reading_time }} min read</span>
-            {% endif %}
-        </div>
-        {% if post.description %}
-        <p class="post-summary">{{ post.description }}</p>
-        {% elif post.extra.excerpt %}
-        <p class="post-summary">{{ post.extra.excerpt }}</p>
-        {% elif post.summary %}
-        <p class="post-summary">{{ post.summary | safe }}</p>
-        {% endif %}
-    </li>
-    {% endfor %}
-</ul>
+    async function initSudoku() {
+        await init('/sudoku/sudoku_wasm_bg.wasm');
 
-<a href="{{ get_url(path='@/posts/_index.md') }}" class="view-all">View all posts &rarr;</a>
-{% else %}
-<p>No posts yet. Check back soon!</p>
-{% endif %}
+        game = new SudokuGame('sudoku-canvas');
+        game.set_theme(currentTheme);
+        game.new_game(document.getElementById('difficulty-select').value);
+
+        function gameLoop() {
+            game.tick();
+            requestAnimationFrame(gameLoop);
+        }
+        gameLoop();
+
+        document.addEventListener('keydown', (event) => {
+            if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.tagName === 'SELECT') return;
+            game.handle_key(event);
+        });
+
+        document.getElementById('new-game-btn').addEventListener('click', () => {
+            game.new_game(document.getElementById('difficulty-select').value);
+        });
+
+        document.getElementById('difficulty-select').addEventListener('change', (e) => {
+            game.new_game(e.target.value);
+        });
+
+        document.getElementById('theme-btn').addEventListener('click', () => {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            game.set_theme(currentTheme);
+        });
+
+        function resizeCanvas() {
+            const availableHeight = window.innerHeight - 200;
+            const availableWidth = window.innerWidth - 32;
+            const size = Math.min(availableWidth, availableHeight, 700);
+            game.resize(size, size);
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+    }
+
+    initSudoku().catch(console.error);
+</script>
 {% endblock %}

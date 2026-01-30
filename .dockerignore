@@ -1,0 +1,9 @@
+brandkit_new/
+*.zip
+*.jpg
+.git/
+.gitignore
+*.md
+k8s/
+deploy.sh
+Dockerfile

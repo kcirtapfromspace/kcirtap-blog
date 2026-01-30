@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>
+        
+    </title>
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.1/github-markdown-light.min.css"
+        integrity="sha512-Pmhg2i/F7+5+7SsdoUqKeH7UAZoVMYb1sxGOoJ0jWXAEHP0XV2H4CITyK267eHWp2jpj7rtqWNkmEOw1tNyYpg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.12/dist/katex.min.css" integrity="sha384-PDbUeNCuE6bOPudPOgFyIUEy3UJawJVwr3XlGO90FIuf5qNIoTLSgOJo/dC2ZXV/" crossorigin="anonymous">
+
+    <!-- The loading of KaTeX is deferred to speed up page rendering -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.12/dist/katex.min.js" integrity="sha384-VkqWq8xtm5YQk1BBXczQ8/Sx+DlCzF8cuS43bZwmtVXzRFtyLTqTCdP7MKmKo+KN" crossorigin="anonymous"></script>
+
+    <!-- To automatically render math in text elements, include the auto-render extension: -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.12/dist/contrib/auto-render.min.js" integrity="sha384-hCXGrW6PitJEwbkoStFjeJxv+fSOOQKOPbJxSfM6G5sWZjAyWhXiTIIAmQqnlLlh" crossorigin="anonymous"
+        onload="renderMathInElement(document.body, {delimiters: [{ left: '$$',  right: '$$',  display: false }]});"></script>
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+
+        @media (max-width: 767px) {
+            .markdown-body {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <article class="markdown-body">
+        <h1>Patrick Deutsch's CV</h1>
+        <ul>
+        <li>Phone: +1 570 778 7336</li>
+        <li>Email: <a href="mailto:patrickdeutsch@gmail.com">patrickdeutsch@gmail.com</a></li>
+        <li>Location: Denver, CO</li>
+        <li>Website: <a href="https://kcirtap.io/">kcirtap.io</a></li>
+        <li>LinkedIn: <a href="https://linkedin.com/in/patrickdeutsch">patrickdeutsch</a></li>
+        <li>GitHub: <a href="https://github.com/kcirtapfromspace">kcirtapfromspace</a></li>
+        </ul>
+        <h1>Summary</h1>
+        <p>Staff Data Architect with 10+ years building production data platforms at scale. Architected systems serving 100M+ users across federal agencies (VA, HHS, CMS). Expert in Kubernetes workflow orchestration, streaming architectures (Kafka, Kinesis), and data lakehouse design. Led data migrations processing 100K+ records with zero downtime. Track record reducing infrastructure costs 30-50% while standardizing observability (DORA metrics, Four Golden Signals) across 40+ engineering teams.</p>
+        <h1>Skills</h1>
+        <p><strong>Distributed Systems:</strong> Kafka, Kinesis, Debezium CDC, Argo Workflows, Apache Spark, Real-time Streaming</p>
+        <p><strong>Data Platforms:</strong> AWS (Redshift, Lake Formation, Glue, Step Functions), DuckDB, PostgreSQL, Parquet, Iceberg</p>
+        <p><strong>Infrastructure:</strong> Kubernetes, Docker, Helm, Terraform, CloudFormation, GitHub Actions CI/CD</p>
+        <p><strong>Observability:</strong> Datadog, Prometheus, Grafana, OpenTelemetry, DORA Metrics, Four Golden Signals</p>
+        <p><strong>Languages:</strong> Python, Go, SQL, Java, Bash</p>
+        <p><strong>Data Quality:</strong> dbt, Great Expectations, Deequ, Schema Validation, Data Contracts</p>
+        <h1>Experience</h1>
+        <h2><strong>Ad Hoc LLC</strong>, Staff Data Architect</h2>
+        <p>Remote</p>
+        <p>Jan 2022 – present</p>
+        <p>4 years 1 month</p>
+        <ul>
+        <li>
+        <p>Architected unified observability platform for VA.gov serving 18M+ veterans; aggregated Datadog, GitHub, Slack, and PagerDuty alerts into centralized incident management; led 4-person team standardizing DORA metrics across 40+ teams</p>
+        </li>
+        <li>
+        <p>Led mainframe-to-cloud payroll migration for Colorado state government processing 100K+ employee records; designed idempotent ELT with dbt/DuckDB achieving sub-hour refresh latency; reduced infrastructure costs 30%</p>
+        </li>
+        <li>
+        <p>Built production BERT inference pipeline for HHS Head Start ($15.8B program) semantic deduplication; achieved sub-200ms latency in resource-constrained Cloud Foundry (2GB) via lazy loading and batch vectorization</p>
+        </li>
+        <li>
+        <p>Designed real-time eCR ingestion pipeline (HL7, FHIR) processing 50K+ events/day with NLP enrichment (AWS Comprehend Medical) and identity resolution</p>
+        </li>
+        </ul>
+        <h2><strong>Workiva</strong>, Senior Data Infrastructure Engineer</h2>
+        <p>Remote</p>
+        <p>Jan 2019 – Jan 2022</p>
+        <p>3 years 1 month</p>
+        <ul>
+        <li>
+        <p>Architected enterprise Argo Workflows platform on Kubernetes with Helm charts, Aurora PostgreSQL (multi-AZ), S3 with KMS encryption, and Okta SSO; reduced pipeline deployment time from days to hours</p>
+        </li>
+        <li>
+        <p>Pioneered Data Mesh architecture using AWS Lake Formation with cell-level RBAC enabling 200+ analysts self-service access to domain-specific data products</p>
+        </li>
+        <li>
+        <p>Implemented Apache Hudi proof-of-concept for Change Data Capture, laying foundation for real-time analytics capabilities</p>
+        </li>
+        <li>
+        <p>Drove Splunk SmartStore adoption achieving 50% cost reduction and 20% query performance improvement; established data quality practices with Great Expectations</p>
+        </li>
+        </ul>
+        <h2><strong>Vail Resorts</strong>, IT Infrastructure Analyst</h2>
+        <p>Broomfield, CO</p>
+        <p>Jan 2015 – Jan 2019</p>
+        <p>4 years 1 month</p>
+        <ul>
+        <li>
+        <p>Managed infrastructure for $300M eCommerce platform (IIS, MSSQL, F5, VMware)</p>
+        </li>
+        <li>
+        <p>Built Splunk-based real-time monitoring; maintained PCI compliance through security migrations</p>
+        </li>
+        <li>
+        <p>Ensured platform reliability during peak seasons handling millions of concurrent users</p>
+        </li>
+        </ul>
+        <h2><strong>Amazon</strong>, IT Support Technician</h2>
+        <p>Pennsylvania</p>
+        <p>Jan 2010 – Jan 2014</p>
+        <p>4 years 1 month</p>
+        <ul>
+        <li>
+        <p>Interim IT Project Manager for $5M fulfillment center expansion (800K sqft), launching on schedule</p>
+        </li>
+        <li>
+        <p>Deployed facility-wide infrastructure including 1,000+ cameras, 100 switches, 50 servers</p>
+        </li>
+        </ul>
+        <h1>Projects</h1>
+        <h2><strong>CDC Lakehouse Demo</strong></h2>
+        <p>Jan 2023 – present</p>
+        <ul>
+        <li>
+        <p>Built complete CDC pipeline from PostgreSQL through Debezium, Kafka, Parquet to dbt/DuckDB analytics layer</p>
+        </li>
+        <li>
+        <p>Implemented Argo Workflows orchestration on Kubernetes with Great Expectations data quality validation</p>
+        </li>
+        <li>
+        <p>Demonstrates production patterns for streaming ingestion, batch transformation, and analytics serving</p>
+        </li>
+        </ul>
+        <h1>Education</h1>
+        <h2><strong>The Pennsylvania State University</strong>, Information Sciences and Technology</h2>
+        <p><strong>BS</strong></p>
+        <p>University Park, PA</p>
+        <p>May 2016</p>
+        <h1>Certifications</h1>
+        <ul>
+        <li>
+        <p>AWS Certified Solutions Architect - Associate (2019)</p>
+        </li>
+        <li>
+        <p>AWS Certified Data Analytics - Specialty (2023)</p>
+        </li>
+        </ul>
+    </article>
+</body>
+
+</html>

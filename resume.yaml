@@ -1,0 +1,97 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/rendercv/rendercv/refs/tags/v2.6/schema.json
+# Master resume for Patrick Deutsch - Updated 2026-01-27
+cv:
+  name: Patrick Deutsch
+  headline: Staff Data Architect / Senior Data Engineer
+  location: Denver, CO
+  email: patrickdeutsch@gmail.com
+  phone: +1-570-778-7336
+  website: https://kcirtap.io
+  social_networks:
+    - network: LinkedIn
+      username: patrickdeutsch
+    - network: GitHub
+      username: kcirtapfromspace
+  sections:
+    summary:
+      - Staff Data Architect with 10+ years building production data platforms at scale. Architected systems serving 100M+ users across federal agencies (VA, HHS, CMS). Expert in Kubernetes workflow orchestration, streaming architectures (Kafka, Kinesis), and data lakehouse design. Led data migrations processing 100K+ records with zero downtime. Track record reducing infrastructure costs 30-50% while standardizing observability (DORA metrics, Four Golden Signals) across 40+ engineering teams.
+    skills:
+      - label: Distributed Systems
+        details: Kafka, Kinesis, Debezium CDC, Argo Workflows, Apache Spark, Real-time Streaming
+      - label: Data Platforms
+        details: AWS (Redshift, Lake Formation, Glue, Step Functions), DuckDB, PostgreSQL, Parquet, Iceberg
+      - label: Infrastructure
+        details: Kubernetes, Docker, Helm, Terraform, CloudFormation, GitHub Actions CI/CD
+      - label: Observability
+        details: Datadog, Prometheus, Grafana, OpenTelemetry, DORA Metrics, Four Golden Signals
+      - label: Languages
+        details: Python, Go, SQL, Java, Bash
+      - label: Data Quality
+        details: dbt, Great Expectations, Deequ, Schema Validation, Data Contracts
+    experience:
+      - company: Ad Hoc LLC
+        position: Staff Data Architect
+        start_date: 2022-01
+        end_date: present
+        location: Remote
+        highlights:
+          - Architected unified observability platform for VA.gov serving 18M+ veterans; aggregated Datadog, GitHub, Slack, and PagerDuty alerts into centralized incident management; led 4-person team standardizing DORA metrics across 40+ teams
+          - Led mainframe-to-cloud payroll migration for Colorado state government processing 100K+ employee records; designed idempotent ELT with dbt/DuckDB achieving sub-hour refresh latency; reduced infrastructure costs 30%
+          - Built production BERT inference pipeline for HHS Head Start ($15.8B program) semantic deduplication; achieved sub-200ms latency in resource-constrained Cloud Foundry (2GB) via lazy loading and batch vectorization
+          - Designed real-time eCR ingestion pipeline (HL7, FHIR) processing 50K+ events/day with NLP enrichment (AWS Comprehend Medical) and identity resolution
+      - company: Workiva
+        position: Senior Data Infrastructure Engineer
+        start_date: 2019-01
+        end_date: 2022-01
+        location: Remote
+        highlights:
+          - Architected enterprise Argo Workflows platform on Kubernetes with Helm charts, Aurora PostgreSQL (multi-AZ), S3 with KMS encryption, and Okta SSO; reduced pipeline deployment time from days to hours
+          - Pioneered Data Mesh architecture using AWS Lake Formation with cell-level RBAC enabling 200+ analysts self-service access to domain-specific data products
+          - Implemented Apache Hudi proof-of-concept for Change Data Capture, laying foundation for real-time analytics capabilities
+          - Drove Splunk SmartStore adoption achieving 50% cost reduction and 20% query performance improvement; established data quality practices with Great Expectations
+      - company: Vail Resorts
+        position: IT Infrastructure Analyst
+        start_date: 2015-01
+        end_date: 2019-01
+        location: Broomfield, CO
+        highlights:
+          - Managed infrastructure for $300M eCommerce platform (IIS, MSSQL, F5, VMware)
+          - Built Splunk-based real-time monitoring; maintained PCI compliance through security migrations
+          - Ensured platform reliability during peak seasons handling millions of concurrent users
+      - company: Amazon
+        position: IT Support Technician
+        start_date: 2010-01
+        end_date: 2014-01
+        location: Pennsylvania
+        highlights:
+          - Interim IT Project Manager for $5M fulfillment center expansion (800K sqft), launching on schedule
+          - Deployed facility-wide infrastructure including 1,000+ cameras, 100 switches, 50 servers
+    projects:
+      - name: CDC Lakehouse Demo
+        start_date: 2023-01
+        end_date: present
+        location:
+        highlights:
+          - Built complete CDC pipeline from PostgreSQL through Debezium, Kafka, Parquet to dbt/DuckDB analytics layer
+          - Implemented Argo Workflows orchestration on Kubernetes with Great Expectations data quality validation
+          - Demonstrates production patterns for streaming ingestion, batch transformation, and analytics serving
+        url: https://github.com/kcirtapfromspace/database_thing
+    education:
+      - institution: The Pennsylvania State University
+        area: Information Sciences and Technology
+        degree: BS
+        start_date:
+        end_date: 2016-05
+        location: University Park, PA
+        summary:
+        highlights:
+    certifications:
+      - bullet: AWS Certified Solutions Architect - Associate (2019)
+      - bullet: AWS Certified Data Analytics - Specialty (2023)
+
+design:
+  theme: classic
+  page:
+    size: us-letter
+    show_footer: false
+    show_top_note: false

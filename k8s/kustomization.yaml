@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: kcirtap
+
+resources:
+  - namespace.yaml
+  - deployment.yaml
+  - service.yaml
+  # - ingress.yaml        # Disabled - using Cloudflare Tunnel instead
+  # - cloudflare-tunnel.yaml  # Uncomment after setting up credentials
+
+labels:
+  - pairs:
+      app.kubernetes.io/managed-by: argocd

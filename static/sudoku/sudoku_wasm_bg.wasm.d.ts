@@ -1,0 +1,32 @@
+/* tslint:disable */
+/* eslint-disable */
+export const memory: WebAssembly.Memory;
+export const __wbg_sudokugame_free: (a: number, b: number) => void;
+export const sudokugame_difficulty: (a: number) => [number, number];
+export const sudokugame_elapsed_secs: (a: number) => number;
+export const sudokugame_elapsed_string: (a: number) => [number, number];
+export const sudokugame_get_height: (a: number) => number;
+export const sudokugame_get_state_json: (a: number) => [number, number];
+export const sudokugame_get_width: (a: number) => number;
+export const sudokugame_handle_key: (a: number, b: any) => number;
+export const sudokugame_hints_used: (a: number) => number;
+export const sudokugame_is_complete: (a: number) => number;
+export const sudokugame_is_game_over: (a: number) => number;
+export const sudokugame_is_paused: (a: number) => number;
+export const sudokugame_load_state_json: (a: number, b: number, c: number) => number;
+export const sudokugame_mistakes: (a: number) => number;
+export const sudokugame_new: (a: number, b: number) => [number, number, number];
+export const sudokugame_new_game: (a: number, b: number, c: number) => void;
+export const sudokugame_resize: (a: number, b: number, c: number) => void;
+export const sudokugame_set_theme: (a: number, b: number, c: number) => void;
+export const sudokugame_tick: (a: number) => void;
+export const sudokugame_toggle_pause: (a: number) => void;
+export const init: () => void;
+export const __wbindgen_exn_store: (a: number) => void;
+export const __externref_table_alloc: () => number;
+export const __wbindgen_externrefs: WebAssembly.Table;
+export const __wbindgen_free: (a: number, b: number, c: number) => void;
+export const __wbindgen_malloc: (a: number, b: number) => number;
+export const __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
+export const __externref_table_dealloc: (a: number) => void;
+export const __wbindgen_start: () => void;
