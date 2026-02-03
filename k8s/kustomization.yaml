@@ -8,7 +8,7 @@ resources:
   - deployment.yaml
   - service.yaml
   # - ingress.yaml        # Disabled - using Cloudflare Tunnel instead
-  # - cloudflare-tunnel.yaml  # Uncomment after setting up credentials
+  - cloudflare-tunnel.yaml
 
 labels:
   - pairs:
