@@ -8,7 +8,7 @@ resources:
   - deployment.yaml
   - service.yaml
   # - ingress.yaml        # Disabled - using Cloudflare Tunnel instead
-  - cloudflare-tunnel.yaml
+  # - cloudflare-tunnel.yaml  # Now managed by Helm chart (cloudflare-tunnel-remote)
 
 labels:
   - pairs:
