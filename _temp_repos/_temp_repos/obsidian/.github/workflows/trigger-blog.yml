@@ -1,0 +1,20 @@
+name: Trigger Blog Rebuild
+
+on:
+  push:
+    paths:
+      - 'Depot/**'
+    branches:
+      - main
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger blog rebuild
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.BLOG_REPO_TOKEN }}
+          repository: kcirtapfromspace/kcirtap-blog
+          event-type: posts-updated
+          client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
