@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: site
-          image: ttl.sh/kcirtap-blog:2h
+          image: ghcr.io/kcirtapfromspace/kcirtap-blog:29eee91
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
