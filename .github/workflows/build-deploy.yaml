@@ -40,35 +40,52 @@ jobs:
           path: _obsidian
           token: ${{ secrets.OBSIDIAN_REPO_TOKEN }}
           sparse-checkout: |
-            Depot
+            the_archives/archives
 
       - name: Sync blog posts
         run: |
           mkdir -p content/posts
-          # Copy markdown files from Depot, convert to Zola format
-          for file in _obsidian/Depot/*.md; do
-            [ -f "$file" ] || continue
-            filename=$(basename "$file")
-            slug=$(echo "$filename" | sed 's/.md$//' | tr ' ' '-' | tr '[:upper:]' '[:lower:]')
+          echo "Syncing posts from obsidian repository..."
 
-            # Add Zola frontmatter if not present
-            if ! grep -q '^\+\+\+' "$file"; then
-              title=$(echo "$filename" | sed 's/.md$//')
-              {
-                echo "+++"
-                echo "title = \"$title\""
-                echo "date = $(date +%Y-%m-%d)"
-                echo "draft = false"
-                echo "[taxonomies]"
-                echo "tags = [\"notes\"]"
-                echo "+++"
-                echo ""
-                cat "$file"
-              } > "content/posts/${slug}.md"
-            else
-              cp "$file" "content/posts/${slug}.md"
-            fi
-          done
+          # Sync posts from the_archives/archives
+          if [ -d "_obsidian/the_archives/archives" ]; then
+            # Copy standalone markdown files with frontmatter
+            for file in _obsidian/the_archives/archives/*.md; do
+              if [ -f "$file" ]; then
+                if head -1 "$file" | grep -q "^---"; then
+                  cp "$file" content/posts/
+                  echo "Copied file: $(basename $file)"
+                else
+                  echo "Skipped (no frontmatter): $(basename $file)"
+                fi
+              fi
+            done
+
+            # Copy folders with index.md that has frontmatter (page bundles)
+            for dir in _obsidian/the_archives/archives/*/; do
+              if [ -d "$dir" ]; then
+                dirname=$(basename "$dir")
+                if [ -f "${dir}index.md" ]; then
+                  if head -1 "${dir}index.md" | grep -q "^---"; then
+                    cp -r "$dir" "content/posts/$dirname"
+                    echo "Copied folder: $dirname"
+                  else
+                    echo "Skipped folder (no frontmatter): $dirname"
+                  fi
+                else
+                  echo "Skipped folder (no index.md): $dirname"
+                fi
+              fi
+            done
+            echo "Posts synced successfully"
+          fi
+
+          # List synced content
+          echo "Content directory:"
+          ls -la content/posts/
+
+      - name: Convert frontmatter for Zola compatibility
+        run: python3 scripts/convert_frontmatter.py content/posts
 
       - name: Fetch resume from job-search
         uses: actions/checkout@v4
