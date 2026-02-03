@@ -38,7 +38,7 @@ jobs:
         with:
           repository: kcirtapfromspace/obsidian
           path: _obsidian
-          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          token: ${{ secrets.OBSIDIAN_REPO_TOKEN }}
           sparse-checkout: |
             Depot
 
@@ -75,7 +75,7 @@ jobs:
         with:
           repository: kcirtapfromspace/job-search
           path: _job-search
-          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          token: ${{ secrets.OBSIDIAN_REPO_TOKEN }}
           sparse-checkout: |
             Patrick_Deutsch_Master_Resume_2026.yaml
             rendercv_output
@@ -89,12 +89,12 @@ jobs:
           [ -f _job-search/rendercv_output/Patrick_Deutsch_CV.html ] && \
             cp _job-search/rendercv_output/Patrick_Deutsch_CV.html static/resume/cv.html
 
-      - name: Fetch WASM from sudoku-workspace
+      - name: Fetch WASM from sudoku
         uses: actions/checkout@v4
         with:
-          repository: kcirtapfromspace/sudoku-workspace
+          repository: kcirtapfromspace/sudoku
           path: _sudoku
-          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          token: ${{ secrets.OBSIDIAN_REPO_TOKEN }}
           sparse-checkout: |
             crates/sudoku-wasm/www/pkg
 

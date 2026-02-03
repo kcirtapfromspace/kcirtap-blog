@@ -1,0 +1,21 @@
+# Add this file to: kcirtapfromspace/sudoku/.github/workflows/trigger-blog.yml
+name: Trigger Blog Rebuild
+
+on:
+  push:
+    paths:
+      - 'crates/sudoku-wasm/www/pkg/**'
+    branches:
+      - main
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger blog rebuild
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.BLOG_REPO_TOKEN }}
+          repository: kcirtapfromspace/kcirtap-blog
+          event-type: wasm-updated
+          client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
