@@ -36,16 +36,6 @@ spec:
                   key: APP_SECRET
             - name: DISABLE_TELEMETRY
               value: "1"
-            - name: AUTH_GITHUB_ID
-              valueFrom:
-                secretKeyRef:
-                  name: umami-secrets
-                  key: AUTH_GITHUB_ID
-            - name: AUTH_GITHUB_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: umami-secrets
-                  key: AUTH_GITHUB_SECRET
           resources:
             requests:
               memory: "128Mi"
