@@ -35,7 +35,7 @@ spec:
         app.kubernetes.io/component: database
     spec:
       nodeSelector:
-        storage.longhorn.io/enabled: "true"
+        kubernetes.io/hostname: talos-lwn-dba
       containers:
         - name: postgres
           image: postgres:15-alpine
