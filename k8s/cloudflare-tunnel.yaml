@@ -15,6 +15,9 @@ data:
     ingress:
       - hostname: kcirtap.io
         service: http://kcirtap-site:80
+      # Umami analytics - must be before wildcard
+      - hostname: umami.kcirtap.io
+        service: http://umami.umami.svc.cluster.local:80
       - hostname: "*.kcirtap.io"
         service: http://kcirtap-site:80
       - service: http_status:404
