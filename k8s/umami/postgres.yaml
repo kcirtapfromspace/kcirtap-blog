@@ -34,6 +34,8 @@ spec:
         app.kubernetes.io/name: umami-postgres
         app.kubernetes.io/component: database
     spec:
+      nodeSelector:
+        storage.longhorn.io/enabled: "true"
       containers:
         - name: postgres
           image: postgres:15-alpine
