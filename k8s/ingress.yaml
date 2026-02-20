@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kcirtap-site
+  namespace: kcirtap
+  labels:
+    app.kubernetes.io/name: kcirtap-site
+  annotations:
+    # For nginx ingress controller
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    # For traefik
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  ingressClassName: nginx  # Change to 'traefik' if using traefik
+  rules:
+    - host: kcirtap.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kcirtap-site
+                port:
+                  name: http

@@ -1,0 +1,26 @@
+# Instructions for setting up Cloudflare Tunnel
+#
+# 1. Create a tunnel in Cloudflare Dashboard or via CLI:
+#    cloudflared tunnel create kcirtap-site
+#
+# 2. Get the tunnel credentials:
+#    cloudflared tunnel token kcirtap-site
+#    # This gives you the base64 token containing AccountTag, TunnelSecret, TunnelID
+#
+# 3. Create the secret (replace with your values):
+#    kubectl create secret generic cloudflare-tunnel-credentials \
+#      --namespace=kcirtap \
+#      --from-file=credentials.json=/path/to/credentials.json
+#
+# 4. Configure DNS in Cloudflare:
+#    cloudflared tunnel route dns kcirtap-site kcirtap.io
+#
+# 5. Apply the tunnel deployment:
+#    kubectl apply -f cloudflare-tunnel.yaml
+#
+# Alternative: Use SealedSecrets for GitOps
+#
+# If using sealed-secrets, create a SealedSecret:
+#   kubeseal --format yaml < cloudflare-secret.yaml > cloudflare-tunnel-sealed.yaml
+#
+# Then commit the sealed secret to git instead of the plain secret.
