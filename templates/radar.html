@@ -13,6 +13,7 @@
         overflow: hidden;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         margin: 2rem 0;
+        position: relative;
     }
 
     .radar-container iframe {
@@ -21,14 +22,47 @@
         border: none;
     }
 
-    .radar-info {
-        margin-top: 2rem;
+    .radar-fallback {
+        display: none;
+        position: absolute;
+        inset: 0;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        background: var(--code-bg);
+        border-radius: 8px;
+        text-align: center;
+        padding: 2rem;
     }
 
-    @media (prefers-color-scheme: dark) {
-        .stat-card {
-            background: #2d2d2d;
-        }
+    .radar-fallback-icon {
+        font-size: 3rem;
+    }
+
+    .radar-fallback p {
+        color: var(--text-secondary);
+        max-width: 28rem;
+    }
+
+    .radar-fallback .radar-open-link {
+        display: inline-block;
+        padding: 0.625rem 1.5rem;
+        background: var(--accent);
+        color: white;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        text-decoration: none;
+    }
+
+    .radar-fallback .radar-open-link:hover {
+        background: var(--accent-hover);
+        text-decoration: none;
+        color: white;
+    }
+
+    .radar-info {
+        margin-top: 2rem;
     }
 </style>
 {% endblock %}
@@ -42,17 +76,47 @@
         {% endif %}
     </header>
 
-    <div class="radar-container">
+    <div class="radar-container" id="radar-container">
         <iframe
+            id="radar-iframe"
             src="https://radar.kcirtap.io/"
             title="Live ADS-B Radar"
             loading="lazy"
             allow="fullscreen"
         ></iframe>
+        <div class="radar-fallback" id="radar-fallback">
+            <div class="radar-fallback-icon">&#9992;&#65039;</div>
+            <p>The radar feed can't be embedded here due to browser security policy. Open it directly instead:</p>
+            <a href="https://radar.kcirtap.io/" class="radar-open-link" target="_blank" rel="noopener">Open radar.kcirtap.io &rarr;</a>
+        </div>
     </div>
 
     <div class="radar-info">
         {{ page.content | safe }}
     </div>
 </article>
+
+<script>
+    (function() {
+        var fallback = document.getElementById('radar-fallback');
+        var iframe = document.getElementById('radar-iframe');
+        // If the iframe is blocked by X-Frame-Options, the browser won't fire
+        // an error event but the frame will be empty. Use a timeout fallback.
+        setTimeout(function() {
+            try {
+                // Cross-origin access throws — that means the frame loaded (good).
+                void iframe.contentWindow.location.href;
+                // If we get here, same-origin and accessible — should not happen for
+                // radar.kcirtap.io on kcirtap.io, but means it loaded.
+            } catch(e) {
+                if (e.name === 'SecurityError') {
+                    // Cross-origin frame loaded successfully
+                    return;
+                }
+                // Other error — frame may be blocked
+                fallback.style.display = 'flex';
+            }
+        }, 4000);
+    })();
+</script>
 {% endblock %}

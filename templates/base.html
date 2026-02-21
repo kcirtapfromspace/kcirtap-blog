@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
 
     <title>{% block title %}{{ config.title }}{% endblock %}</title>
     <meta name="description" content="{% block description %}{{ config.description }}{% endblock %}">
@@ -31,6 +32,7 @@
     <link rel="stylesheet" href="{{ get_url(path='style.css') }}">
 
     <!-- Favicons -->
+    <link rel="icon" href="{{ get_url(path='favicon.ico') }}" sizes="any">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ get_url(path='icon-32.png') }}">
     <link rel="icon" type="image/png" sizes="192x192" href="{{ get_url(path='icon-192.png') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ get_url(path='icon-180.png') }}">

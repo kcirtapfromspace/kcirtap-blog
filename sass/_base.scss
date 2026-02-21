@@ -3,6 +3,7 @@
 
 // CSS Custom Properties (for dark mode switching)
 :root {
+  color-scheme: light dark;
   --bg: #{$bg-light};
   --text: #{$text-light};
   --text-secondary: #{$text-secondary-light};

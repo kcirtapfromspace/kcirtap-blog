@@ -1,8 +1,7 @@
 # Zola configuration for kcirtap.io
 # https://www.getzola.org/documentation/getting-started/configuration/
 
-# Use GitHub Pages URL for now (switch to kcirtap.io when ready)
-base_url = "https://kcirtapfromspace.github.io/kcirtap-blog"
+base_url = "https://kcirtap.io"
 title = "escapades in engineering"
 description = "eventually correct with Patrick Deutsch"
 default_language = "en"
