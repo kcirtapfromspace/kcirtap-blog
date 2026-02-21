@@ -1,0 +1,22 @@
+# Add this file to: kcirtapfromspace/job-search/.github/workflows/trigger-blog.yml
+name: Trigger Blog Rebuild
+
+on:
+  push:
+    paths:
+      - 'Patrick_Deutsch_Master_Resume_2026.yaml'
+      - 'rendercv_output/**'
+    branches:
+      - main
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger blog rebuild
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.BLOG_REPO_TOKEN }}
+          repository: kcirtapfromspace/kcirtap-blog
+          event-type: resume-updated
+          client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
