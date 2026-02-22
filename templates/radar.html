@@ -4,119 +4,236 @@
 {% block description %}{{ page.description }}{% endblock %}
 
 {% block head_extra %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-    .radar-container {
-        width: 100%;
-        height: 70vh;
-        min-height: 500px;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        margin: 2rem 0;
-        position: relative;
-    }
+    .main { padding: 0 !important; min-height: 0 !important; height: calc(100vh - 4rem - 1px); }
+    .main > .container { max-width: 100%; padding: 0; height: 100%; display: flex; flex-direction: column; }
+    .footer { display: none; }
 
-    .radar-container iframe {
-        width: 100%;
-        height: 100%;
-        border: none;
-    }
-
-    .radar-fallback {
-        display: none;
-        position: absolute;
-        inset: 0;
-        flex-direction: column;
+    .radar-stats {
+        display: flex;
         align-items: center;
         justify-content: center;
-        gap: 1rem;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        min-height: 2.5rem;
+        padding: 0.5rem 1rem;
         background: var(--code-bg);
-        border-radius: 8px;
-        text-align: center;
-        padding: 2rem;
-    }
-
-    .radar-fallback-icon {
-        font-size: 3rem;
-    }
-
-    .radar-fallback p {
+        border-bottom: 1px solid var(--border);
+        font-size: 0.875rem;
         color: var(--text-secondary);
-        max-width: 28rem;
     }
+    .radar-stats strong { color: var(--text); }
 
-    .radar-fallback .radar-open-link {
-        display: inline-block;
-        padding: 0.625rem 1.5rem;
+    #radar-map { flex: 1; min-height: 0; }
+
+    .receiver-dot-wrap { background: none !important; border: none !important; }
+    .receiver-dot {
+        width: 14px;
+        height: 14px;
         background: var(--accent);
-        color: white;
+        border-radius: 50%;
+        box-shadow: 0 0 0 0 rgba(226, 58, 46, 0.4);
+        animation: rx-pulse 2s ease-out infinite;
+    }
+    @keyframes rx-pulse {
+        0% { box-shadow: 0 0 0 0 rgba(226, 58, 46, 0.5); }
+        100% { box-shadow: 0 0 0 18px rgba(226, 58, 46, 0); }
+    }
+
+    .aircraft-icon { background: none !important; border: none !important; }
+
+    .leaflet-popup-content-wrapper {
+        background: var(--bg);
+        color: var(--text);
         border-radius: 0.5rem;
-        font-weight: 500;
-        text-decoration: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
-
-    .radar-fallback .radar-open-link:hover {
-        background: var(--accent-hover);
-        text-decoration: none;
-        color: white;
+    .leaflet-popup-tip { background: var(--bg); }
+    .leaflet-popup-content {
+        margin: 0.75rem 1rem;
+        font-family: inherit;
+        font-size: 0.875rem;
+        line-height: 1.6;
     }
-
-    .radar-info {
-        margin-top: 2rem;
+    .leaflet-popup-close-btn { color: var(--text-secondary) !important; }
+    .leaflet-bar a {
+        background: var(--bg) !important;
+        color: var(--text) !important;
+        border-color: var(--border) !important;
     }
+    .leaflet-bar a:hover { background: var(--code-bg) !important; }
+    .leaflet-control-attribution {
+        background: color-mix(in srgb, var(--bg) 80%, transparent) !important;
+        color: var(--text-secondary) !important;
+        font-size: 0.7rem !important;
+    }
+    .leaflet-control-attribution a { color: var(--accent) !important; }
 </style>
 {% endblock %}
 
 {% block content %}
-<article class="page">
-    <header class="page-header">
-        <h1>{{ page.title }}</h1>
-        {% if page.description %}
-        <p class="page-description">{{ page.description }}</p>
-        {% endif %}
-    </header>
+<div class="radar-stats" id="radar-stats">
+    <span><strong id="stat-count">0</strong> aircraft</span>
+    <span>Max range: <strong id="stat-range">0</strong> nm</span>
+    <span><strong id="stat-rate">&mdash;</strong> msg/s</span>
+</div>
+<div id="radar-map"></div>
 
-    <div class="radar-container" id="radar-container">
-        <iframe
-            id="radar-iframe"
-            src="https://radar.kcirtap.io/"
-            title="Live ADS-B Radar"
-            loading="lazy"
-            allow="fullscreen"
-        ></iframe>
-        <div class="radar-fallback" id="radar-fallback">
-            <div class="radar-fallback-icon">&#9992;&#65039;</div>
-            <p>The radar feed can't be embedded here due to browser security policy. Open it directly instead:</p>
-            <a href="https://radar.kcirtap.io/" class="radar-open-link" target="_blank" rel="noopener">Open radar.kcirtap.io &rarr;</a>
-        </div>
-    </div>
-
-    <div class="radar-info">
-        {{ page.content | safe }}
-    </div>
-</article>
-
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-rotatedmarker@0.2.0/leaflet.rotatedMarker.js"></script>
 <script>
-    (function() {
-        var fallback = document.getElementById('radar-fallback');
-        var iframe = document.getElementById('radar-iframe');
-        // If the iframe is blocked by X-Frame-Options, the browser won't fire
-        // an error event but the frame will be empty. Use a timeout fallback.
-        setTimeout(function() {
-            try {
-                // Cross-origin access throws — that means the frame loaded (good).
-                void iframe.contentWindow.location.href;
-                // If we get here, same-origin and accessible — should not happen for
-                // radar.kcirtap.io on kcirtap.io, but means it loaded.
-            } catch(e) {
-                if (e.name === 'SecurityError') {
-                    // Cross-origin frame loaded successfully
-                    return;
+(function () {
+    var RX_LAT = 39.765004;
+    var RX_LON = -105.015555;
+    var POLL_MS = 5000;
+    var STALE_MS = 60000;
+
+    var darkMq = window.matchMedia('(prefers-color-scheme: dark)');
+
+    var darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd', maxZoom: 20
+    });
+    var lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd', maxZoom: 20
+    });
+
+    var activeTiles = darkMq.matches ? darkTiles : lightTiles;
+    var map = L.map('radar-map', { center: [RX_LAT, RX_LON], zoom: 9 });
+    activeTiles.addTo(map);
+
+    darkMq.addEventListener('change', function (e) {
+        map.removeLayer(activeTiles);
+        activeTiles = e.matches ? darkTiles : lightTiles;
+        activeTiles.addTo(map);
+    });
+
+    // Receiver marker
+    L.marker([RX_LAT, RX_LON], {
+        icon: L.divIcon({
+            className: 'receiver-dot-wrap',
+            html: '<div class="receiver-dot"></div>',
+            iconSize: [14, 14], iconAnchor: [7, 7]
+        }),
+        interactive: false, zIndexOffset: -100
+    }).addTo(map);
+
+    // Aircraft state
+    var planes = {};
+    var prevMsg = null;
+    var prevNow = null;
+
+    // Helpers
+    function haversineNm(lat1, lon1, lat2, lon2) {
+        var R = 3440.065;
+        var toRad = Math.PI / 180;
+        var dLat = (lat2 - lat1) * toRad;
+        var dLon = (lon2 - lon1) * toRad;
+        var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * toRad) * Math.cos(lat2 * toRad) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function altColor(alt) {
+        if (alt == null || alt === 'ground') return '#888888';
+        if (alt < 10000) return '#2ecc40';
+        if (alt < 25000) return '#ffdc00';
+        if (alt < 40000) return '#ff851b';
+        return '#ff4136';
+    }
+
+    var PLANE_SVG = '<svg viewBox="0 0 32 32" width="24" height="24"><path d="M16 2 18 12 28 16 18 17 18 24 22 27 22 28 16 26 10 28 10 27 14 24 14 17 4 16 14 12Z" fill="COLOR"/></svg>';
+
+    function planeIcon(color) {
+        return L.divIcon({
+            className: 'aircraft-icon',
+            html: PLANE_SVG.replace('COLOR', color),
+            iconSize: [24, 24], iconAnchor: [12, 12]
+        });
+    }
+
+    function fmtAlt(a) {
+        if (a == null) return '---';
+        if (a === 'ground') return 'Ground';
+        return a.toLocaleString() + ' ft';
+    }
+
+    function popup(ac, dist) {
+        var id = ac.flight ? ac.flight.trim() : (ac.r || ac.hex.toUpperCase());
+        var h = '<b>' + id + '</b>';
+        if (ac.t) h += ' <span style="opacity:.6">(' + ac.t + ')</span>';
+        h += '<br>Alt: ' + fmtAlt(ac.alt_baro);
+        if (ac.gs != null) h += '<br>Speed: ' + Math.round(ac.gs) + ' kts';
+        if (ac.squawk) h += '<br>Squawk: ' + ac.squawk;
+        h += '<br>Range: ' + dist.toFixed(1) + ' nm';
+        return h;
+    }
+
+    // Fetch loop
+    function poll() {
+        fetch('/api/radar/data/aircraft.json')
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                var now = Date.now();
+                var maxRange = 0;
+                var count = 0;
+                var seen = {};
+
+                (data.aircraft || []).forEach(function (ac) {
+                    if (ac.lat == null || ac.lon == null) return;
+                    count++;
+                    seen[ac.hex] = true;
+                    var dist = haversineNm(RX_LAT, RX_LON, ac.lat, ac.lon);
+                    if (dist > maxRange) maxRange = dist;
+                    var color = altColor(ac.alt_baro);
+                    var track = ac.track != null ? ac.track : 0;
+
+                    if (planes[ac.hex]) {
+                        var p = planes[ac.hex];
+                        p.marker.setLatLng([ac.lat, ac.lon]);
+                        p.marker.setIcon(planeIcon(color));
+                        p.marker.setRotationAngle(track);
+                        p.marker.setPopupContent(popup(ac, dist));
+                        p.ts = now;
+                    } else {
+                        var m = L.marker([ac.lat, ac.lon], {
+                            icon: planeIcon(color),
+                            rotationAngle: track,
+                            rotationOrigin: 'center center'
+                        }).addTo(map).bindPopup(popup(ac, dist));
+                        planes[ac.hex] = { marker: m, ts: now };
+                    }
+                });
+
+                // Remove stale
+                Object.keys(planes).forEach(function (hex) {
+                    if (!seen[hex] && now - planes[hex].ts > STALE_MS) {
+                        map.removeLayer(planes[hex].marker);
+                        delete planes[hex];
+                    }
+                });
+
+                // Stats
+                var rate = '\u2014';
+                if (prevMsg != null && prevNow != null) {
+                    var dt = data.now - prevNow;
+                    if (dt > 0) rate = Math.round((data.messages - prevMsg) / dt);
                 }
-                // Other error — frame may be blocked
-                fallback.style.display = 'flex';
-            }
-        }, 4000);
-    })();
+                prevMsg = data.messages;
+                prevNow = data.now;
+
+                document.getElementById('stat-count').textContent = count;
+                document.getElementById('stat-range').textContent = maxRange.toFixed(1);
+                document.getElementById('stat-rate').textContent = rate;
+            })
+            .catch(function (e) { console.error('Radar fetch error:', e); });
+    }
+
+    poll();
+    setInterval(poll, POLL_MS);
+})();
 </script>
 {% endblock %}
