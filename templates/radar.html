@@ -75,6 +75,8 @@
     var RX_LON = -105.015555;
     var POLL_MS = 5000;
     var STALE_MS = 60000;
+    var TRAIL_MAX = 60;         // max positions per aircraft (~5 min at 5s poll)
+    var TRAIL_SEGMENTS = 5;     // number of fade segments
 
     // Protobuf decoders (matching readsb-protobuf schema)
     var AircraftMeta = {
@@ -177,6 +179,27 @@
         return addr ? addr.toString(16).toUpperCase().padStart(6, '0') : '???';
     }
 
+    function drawTrail(p, color) {
+        // Remove old trail segments
+        p.trail_lines.forEach(function (line) { map.removeLayer(line); });
+        p.trail_lines = [];
+        if (p.trail.length < 2) return;
+
+        var segLen = Math.ceil(p.trail.length / TRAIL_SEGMENTS);
+        for (var i = 0; i < TRAIL_SEGMENTS; i++) {
+            var start = i * segLen;
+            var end = Math.min(start + segLen + 1, p.trail.length);
+            if (start >= p.trail.length - 1) break;
+            var pts = p.trail.slice(start, end);
+            if (pts.length < 2) continue;
+            var opacity = 0.15 + 0.65 * ((i + 1) / TRAIL_SEGMENTS);
+            var line = L.polyline(pts, {
+                color: color, weight: 2, opacity: opacity, interactive: false
+            }).addTo(map);
+            p.trail_lines.push(line);
+        }
+    }
+
     function popup(ac, dist) {
         var id = ac.flight ? ac.flight.trim() : fmtHex(ac.addr);
         var h = '<b>' + id + '</b>';
@@ -216,19 +239,23 @@
                         p.marker.setRotationAngle(track);
                         p.marker.setPopupContent(popup(ac, dist));
                         p.ts = now;
+                        p.trail.push([ac.lat, ac.lon]);
+                        if (p.trail.length > TRAIL_MAX) p.trail.shift();
+                        drawTrail(p, color);
                     } else {
                         var m = L.marker([ac.lat, ac.lon], {
                             icon: planeIcon(color),
                             rotationAngle: track,
                             rotationOrigin: 'center center'
                         }).addTo(map).bindPopup(popup(ac, dist));
-                        planes[hex] = { marker: m, ts: now };
+                        planes[hex] = { marker: m, ts: now, trail: [[ac.lat, ac.lon]], trail_lines: [] };
                     }
                 });
 
                 // Remove stale
                 Object.keys(planes).forEach(function (hex) {
                     if (!seen[hex] && now - planes[hex].ts > STALE_MS) {
+                        planes[hex].trail_lines.forEach(function (line) { map.removeLayer(line); });
                         map.removeLayer(planes[hex].marker);
                         delete planes[hex];
                     }
