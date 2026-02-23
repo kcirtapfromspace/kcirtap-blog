@@ -27,20 +27,6 @@
 
     #radar-map { flex: 1; min-height: 0; }
 
-    .receiver-dot-wrap { background: none !important; border: none !important; }
-    .receiver-dot {
-        width: 14px;
-        height: 14px;
-        background: var(--accent);
-        border-radius: 50%;
-        box-shadow: 0 0 0 0 rgba(226, 58, 46, 0.4);
-        animation: rx-pulse 2s ease-out infinite;
-    }
-    @keyframes rx-pulse {
-        0% { box-shadow: 0 0 0 0 rgba(226, 58, 46, 0.5); }
-        100% { box-shadow: 0 0 0 18px rgba(226, 58, 46, 0); }
-    }
-
     .aircraft-icon { background: none !important; border: none !important; }
 
     .leaflet-popup-content-wrapper {
@@ -82,12 +68,50 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-rotatedmarker@0.2.0/leaflet.rotatedMarker.js"></script>
+<script src="https://unpkg.com/pbf@3.2.1/dist/pbf.js"></script>
 <script>
 (function () {
     var RX_LAT = 39.765004;
     var RX_LON = -105.015555;
     var POLL_MS = 5000;
     var STALE_MS = 60000;
+
+    // Protobuf decoders (matching readsb-protobuf schema)
+    var AircraftMeta = {
+        read: function (pbf, end) {
+            return pbf.readFields(this._readField, {
+                addr: null, flight: null, squawk: null, alt_baro: null,
+                lat: null, lon: null, messages: null, seen: null,
+                gs: null, track: null, category: null
+            }, end);
+        },
+        _readField: function (tag, obj, pbf) {
+            if (tag === 1) obj.addr = pbf.readVarint();
+            else if (tag === 2) obj.flight = pbf.readString();
+            else if (tag === 3) obj.squawk = pbf.readVarint();
+            else if (tag === 5) obj.alt_baro = pbf.readVarint(true);
+            else if (tag === 8) obj.lat = pbf.readDouble();
+            else if (tag === 9) obj.lon = pbf.readDouble();
+            else if (tag === 10) obj.messages = pbf.readVarint();
+            else if (tag === 11) obj.seen = pbf.readVarint();
+            else if (tag === 23) obj.gs = pbf.readVarint();
+            else if (tag === 27) obj.track = pbf.readVarint(true);
+            else if (tag === 4) obj.category = pbf.readVarint();
+        }
+    };
+
+    var AircraftsUpdate = {
+        read: function (pbf, end) {
+            return pbf.readFields(this._readField, {
+                now: 0, messages: 0, aircraft: []
+            }, end);
+        },
+        _readField: function (tag, obj, pbf) {
+            if (tag === 1) obj.now = pbf.readVarint();
+            else if (tag === 2) obj.messages = pbf.readVarint();
+            else if (tag === 15) obj.aircraft.push(AircraftMeta.read(pbf, pbf.readVarint() + pbf.pos));
+        }
+    };
 
     var darkMq = window.matchMedia('(prefers-color-scheme: dark)');
 
@@ -110,22 +134,11 @@
         activeTiles.addTo(map);
     });
 
-    // Receiver marker
-    L.marker([RX_LAT, RX_LON], {
-        icon: L.divIcon({
-            className: 'receiver-dot-wrap',
-            html: '<div class="receiver-dot"></div>',
-            iconSize: [14, 14], iconAnchor: [7, 7]
-        }),
-        interactive: false, zIndexOffset: -100
-    }).addTo(map);
-
     // Aircraft state
     var planes = {};
     var prevMsg = null;
     var prevNow = null;
 
-    // Helpers
     function haversineNm(lat1, lon1, lat2, lon2) {
         var R = 3440.065;
         var toRad = Math.PI / 180;
@@ -138,7 +151,7 @@
     }
 
     function altColor(alt) {
-        if (alt == null || alt === 'ground') return '#888888';
+        if (alt == null) return '#888888';
         if (alt < 10000) return '#2ecc40';
         if (alt < 25000) return '#ffdc00';
         if (alt < 40000) return '#ff851b';
@@ -157,42 +170,47 @@
 
     function fmtAlt(a) {
         if (a == null) return '---';
-        if (a === 'ground') return 'Ground';
         return a.toLocaleString() + ' ft';
     }
 
+    function fmtHex(addr) {
+        return addr ? addr.toString(16).toUpperCase().padStart(6, '0') : '???';
+    }
+
     function popup(ac, dist) {
-        var id = ac.flight ? ac.flight.trim() : (ac.r || ac.hex.toUpperCase());
+        var id = ac.flight ? ac.flight.trim() : fmtHex(ac.addr);
         var h = '<b>' + id + '</b>';
-        if (ac.t) h += ' <span style="opacity:.6">(' + ac.t + ')</span>';
         h += '<br>Alt: ' + fmtAlt(ac.alt_baro);
         if (ac.gs != null) h += '<br>Speed: ' + Math.round(ac.gs) + ' kts';
-        if (ac.squawk) h += '<br>Squawk: ' + ac.squawk;
+        if (ac.squawk) h += '<br>Squawk: ' + ac.squawk.toString().padStart(4, '0');
         h += '<br>Range: ' + dist.toFixed(1) + ' nm';
         return h;
     }
 
-    // Fetch loop
+    // Fetch protobuf data
     function poll() {
-        fetch('/api/radar/data/aircraft.json')
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
+        fetch('/api/radar/data/aircraft.pb')
+            .then(function (r) { return r.arrayBuffer(); })
+            .then(function (buf) {
+                var pbf = new Pbf(new Uint8Array(buf));
+                var data = AircraftsUpdate.read(pbf);
                 var now = Date.now();
                 var maxRange = 0;
                 var count = 0;
                 var seen = {};
 
-                (data.aircraft || []).forEach(function (ac) {
+                data.aircraft.forEach(function (ac) {
                     if (ac.lat == null || ac.lon == null) return;
+                    var hex = fmtHex(ac.addr);
                     count++;
-                    seen[ac.hex] = true;
+                    seen[hex] = true;
                     var dist = haversineNm(RX_LAT, RX_LON, ac.lat, ac.lon);
                     if (dist > maxRange) maxRange = dist;
                     var color = altColor(ac.alt_baro);
                     var track = ac.track != null ? ac.track : 0;
 
-                    if (planes[ac.hex]) {
-                        var p = planes[ac.hex];
+                    if (planes[hex]) {
+                        var p = planes[hex];
                         p.marker.setLatLng([ac.lat, ac.lon]);
                         p.marker.setIcon(planeIcon(color));
                         p.marker.setRotationAngle(track);
@@ -204,7 +222,7 @@
                             rotationAngle: track,
                             rotationOrigin: 'center center'
                         }).addTo(map).bindPopup(popup(ac, dist));
-                        planes[ac.hex] = { marker: m, ts: now };
+                        planes[hex] = { marker: m, ts: now };
                     }
                 });
 
@@ -219,7 +237,7 @@
                 // Stats
                 var rate = '\u2014';
                 if (prevMsg != null && prevNow != null) {
-                    var dt = data.now - prevNow;
+                    var dt = (data.now - prevNow) / 1000;
                     if (dt > 0) rate = Math.round((data.messages - prevMsg) / dt);
                 }
                 prevMsg = data.messages;
