@@ -6,13 +6,41 @@ description = "How a ThePrimeagen rant, an ADHD lightbulb, and a Rust game engin
 tags = ["rust", "wasm", "svelte", "d3", "kubernetes", "sudoku", "ios", "homelab"]
 +++
 
-It started with ThePrimeagen ranting about how Claude Code is a terrible TUI and is actually a game engine — which, in his view, there's no need for. Fascinating take on TUI expectations and design.
+## The Spark
 
-That got me tinkering with a little TUI experiment, which got me thinking about win screens. Then the ADHD lightbulb fired: I should build a Sudoku TUI. So Claude and I whipped that up with a Rust-backed game engine.
+In mid-2025, Anthropic engineer [Thariq Shihipar tweeted](https://x.com/trq212/status/2014051501786931427) that Claude Code should be thought of as "a small game engine" rather than just a TUI. Every frame, their pipeline constructs a React scene graph, lays out elements, rasterizes them to a 2D screen, diffs against the previous frame, and generates the minimal ANSI sequences to update the terminal — all within a ~16ms frame budget.
 
-## The Engine: 45 Techniques in Rust
+The developer community had opinions. [Casey Muratori responded](https://x.com/cmuratori/status/2014426615229600211): *"NARRATOR: Claude Code was not, in fact, close to a small game engine."* A [deep analysis on spader.zone](https://spader.zone/engine/) compared Claude Code's renderer head-to-head with Super Mario 64, finding it executes roughly 4.6 billion instructions over a 33ms frame — orders of magnitude more than SM64 — with 70% of the time spent on `futex` synchronization calls and ~89,000 erroneous `sched_yield` syscalls per frame. The critique wasn't that building a renderer is wrong, it's that the complexity was wildly disproportionate to the problem: you're rendering text in a terminal, not polygons in 3D space.
 
-The core of Ukodus is a Sudoku engine written in Rust. It implements 45 human-style solving techniques organized into 10 families:
+ThePrimeagen [weighed in](https://x.com/ThePrimeagen/status/2014764406337351994) and the whole thing blew up across [Hacker News](https://news.ycombinator.com/item?id=46755209) and dev Twitter. The consensus was pretty clear: React scene graphs and game-engine-style frame budgets for terminal text output is over-engineered when tools like Vim have been doing it efficiently for decades.
+
+Fascinating discourse on TUI expectations and design. And it got me tinkering.
+
+## The ADHD Lightbulb
+
+I started with a little TUI experiment — just messing around with rendering, seeing what you could do. That got me thinking about win screens and animations. Then the lightbulb fired: I should build a Sudoku TUI. So Claude and I whipped one up with a Rust-backed game engine.
+
+The initial version was a single monolithic repo. The engine handled generation, solving, and rendering all tangled together. It worked, but it wasn't clean.
+
+## From TUI to Everywhere
+
+While I was crunching on other projects — mainly trying to get my Talos cluster fully provisioned — I kept coming back to the game engine. The thought was simple: I already have this engine, I might as well do a WASM mockup too. From there it was an easy leap to just build the iOS app.
+
+## The r/Sudoku Reckoning
+
+I posted to [r/Sudoku](https://www.reddit.com/r/sudoku/). Man, they do not like AI. But underneath the AI skepticism was genuinely great feedback from people who live and breathe Sudoku. The community has real standards for how puzzles should be rated, what solving techniques should be supported, and how hints should teach rather than just give answers.
+
+That feedback sent me back to the drawing board. I didn't just patch the engine — I rebuilt it. The monolithic repo got split into three:
+
+- [**sudoku-core**](https://github.com/kcirtapfromspace/sudoku-core) — the pure Rust engine. Solving, generation, difficulty rating, variant support. No UI, no platform concerns. Just the math.
+- [**sudoku**](https://github.com/kcirtapfromspace/sudoku) — cross-platform wrappers that consume the core. iOS app, TUI binary, WASM compilation. Each target gets its own interface but shares the same engine underneath.
+- [**ukodus**](https://github.com/kcirtapfromspace/ukodus) — the full platform. Galaxy API, SvelteKit frontend, Neo4j graph backend, leaderboard. The product layer.
+
+The separation forced me to think about clean boundaries. The core crate has zero platform dependencies — it compiles to WASM, ARM (iOS), and x86 without conditional compilation. The cross-platform repo owns the build targets. The platform repo owns the infrastructure. No circular dependencies, no leaky abstractions.
+
+## The Engine: 45 Techniques Deep
+
+With the architecture clean, I could focus on making the engine meet community standards. It now implements 45 human-style solving techniques organized into 10 families:
 
 - **Singles** — Hidden Single, Naked Single (the basics)
 - **Pairs & Triples** — Naked Pair through Hidden Quad
@@ -29,9 +57,7 @@ Each technique has a Sudoku Explainer (SE) difficulty rating. Hidden Single is 1
 
 Why does this matter? Because most Sudoku apps rate puzzles by counting givens or using some vague internal metric. SE ratings map directly to the hardest technique you'd need to solve the puzzle. A puzzle rated 3.2 means you'll need X-Wings. A 7.5 means ALS Chains or Nishio. You know exactly what you're getting into.
 
-The engine also generates puzzles with guaranteed unique solutions, rates them on generation, and encodes them as 8-character short codes for sharing. The same short code works across web, iOS, and terminal.
-
-### How Validation Actually Works
+### How Validation Works
 
 Validation is built on a constraint trait system. Every rule — rows, columns, boxes, and variant rules like X-Sudoku diagonals or Killer cages — implements the same `Constraint` trait with a `validate()` method. When you place a value, the grid runs it through every active constraint. This makes the engine extensible: adding a new Sudoku variant is just a new constraint, not a rewrite of the solver.
 
@@ -59,26 +85,16 @@ The generation configs dial the difficulty:
 
 Extreme puzzles can take up to 2,000 attempts to generate because the generator has to find a grid where the minimum number of clues still forces advanced techniques. This is why the WASM background mining matters — you don't want a player waiting for that.
 
-## From TUI to Everywhere
-
-While I was crunching on other projects — mainly trying to get my Talos cluster fully provisioned — I kept coming back to the game engine. The thought was simple: I already have this engine, I might as well do a WASM mockup too. From there it was an easy leap to just build the iOS app.
+## One Engine, Every Platform
 
 The beauty of writing the core in Rust is that the same engine works everywhere:
 
-- **Browser**: Compiled to WASM, loaded in SvelteKit, renders to canvas
-- **iOS**: Compiled natively via Xcode, same Rust core, native UI shell
-- **Terminal**: Rust binary with a TUI interface
-- **Shared codes**: 8-character short codes and 81-character puzzle strings work across all platforms
+- **Browser**: Compiled to WASM via `wasm-pack` — a 554KB binary and a JS glue module. Renders to `<canvas>`, Rust owns all the drawing logic.
+- **iOS**: Compiled natively via Xcode, same Rust core, native UI shell.
+- **Terminal**: Rust binary with a TUI interface.
+- **Shared codes**: 8-character short codes and 81-character puzzle strings work across all platforms.
 
 You can start a puzzle on iOS, share the code, and your friend can play the exact same puzzle in a browser. The engine deterministically generates the same puzzle from the same seed, so there's no server round-trip needed to decode a shared puzzle.
-
-## The r/Sudoku Reality Check
-
-I posted to r/Sudoku. Man, they do not like AI. But I got some great feedback, so I went back to the game engine determined for it to meet community standards. No clue if I fully achieved that, though I'm happy enough with the product I put out.
-
-## WASM for the Browser
-
-The Rust engine compiles to WebAssembly via `wasm-pack`. The output is a 554KB `.wasm` binary and a JS glue module that exposes the `SudokuGame` class. The game renders to an HTML `<canvas>` — the Rust side owns all the drawing logic, which means the rendering is identical regardless of platform.
 
 Loading WASM in a SvelteKit app requires some care. You can't let Vite try to bundle the WASM module at build time, so the loader uses a dynamic import with a `@vite-ignore` pragma:
 
@@ -90,13 +106,13 @@ await mod.default({
 });
 ```
 
-The WASM files live in `static/wasm/` and get served as plain static assets. No Vite WASM plugin, no special bundler config. The `/play/` route sets `ssr = false` so SvelteKit generates a minimal HTML shell that hydrates client-side — the WASM needs a browser environment with a canvas, so server-side rendering would just blow up.
+The WASM files live in `static/wasm/` and get served as plain static assets. The `/play/` route sets `ssr = false` so SvelteKit generates a minimal HTML shell that hydrates client-side — the WASM needs a browser environment with a canvas, so server-side rendering would just blow up.
 
-The game loop is a standard `requestAnimationFrame` cycle. Every frame calls `game.tick()` on the WASM side, which handles input processing, animation, and canvas rendering. Keyboard events get forwarded from the Svelte component to the WASM engine via `game.handle_key(event)`. The engine supports vim-style navigation (`hjkl`), arrow keys, and WASD — because every good application should support at least three ways to move a cursor.
+The game loop is a standard `requestAnimationFrame` cycle. Every frame calls `game.tick()` on the WASM side, which handles input processing, animation, and canvas rendering. The engine supports vim-style navigation (`hjkl`), arrow keys, and WASD — because every good application should support at least three ways to move a cursor.
 
-## Down the Rabbit Hole: The Galaxy
+## The Galaxy
 
-At some point during testing I learned how astronomically large the number of possible Sudoku puzzles is, and thought it would be fun to map out the constellations of types of Sudoku games. That's when the whole project morphed.
+At some point during testing I learned how astronomically large the number of possible Sudoku puzzles is and thought it would be fun to map out the constellations of types of Sudoku games. That's when the whole project morphed from "a game" into "a platform."
 
 The Galaxy page uses D3's `forceSimulation` to create a force-directed graph. Each node is a puzzle, colored by difficulty tier (green for Beginner through near-black for Extreme). Node size scales with play count. Edges connect puzzles that share solving techniques, so similar puzzles cluster together.
 
@@ -115,13 +131,13 @@ simulation = d3
   .on('tick', ticked);
 ```
 
-The Galaxy also has a live component. When someone completes a puzzle, a WebSocket message pushes the new node into the simulation in real-time. You can literally watch the galaxy grow.
+The Galaxy is live — when someone completes a puzzle, a WebSocket message pushes the new node into the simulation in real-time. You can literally watch the galaxy grow.
 
 There's also a "secrets" system. By default, you only see 22 of the 45 techniques and 6 of the 10 families. The advanced families — Chains, ALS, Forcing, and Other — are hidden until you unlock them by completing harder puzzles. When you unlock secrets, the Galaxy reveals entire new constellations that were invisible before. It's my favorite feature and probably the most unnecessary one.
 
-## SvelteKit 5: Runes and Static Generation
+## The Full Stack
 
-The web frontend is SvelteKit 5 (Svelte 5.49) with TypeScript. The entire state management layer uses Svelte 5 runes — class-based stores with `$state`, `$derived`, and `$effect` in `.svelte.ts` files:
+The web frontend is SvelteKit 5 with TypeScript. State management uses Svelte 5 runes — class-based stores with `$state`, `$derived`, and `$effect`:
 
 ```typescript
 class PlayerStore {
@@ -138,21 +154,15 @@ class PlayerStore {
 export const playerStore = new PlayerStore();
 ```
 
-The app uses `adapter-static` with `prerender = true` and `trailingSlash = 'always'`. Content pages (home, about, techniques, difficulty, privacy, how-to-play, app) get fully pre-rendered to static HTML at build time. Interactive pages (`/play/` and `/galaxy/`) set `ssr = false` because they need browser APIs — canvas for the game, D3 DOM manipulation for the galaxy.
+The app uses `adapter-static` with `prerender = true`. Content pages get fully pre-rendered to static HTML at build time. Interactive pages (`/play/` and `/galaxy/`) set `ssr = false` because they need browser APIs. The build output is plain HTML, CSS, and JS — no Node.js runtime in production.
 
-This hybrid approach means content pages load instantly as static HTML while the interactive pages get a lightweight shell that hydrates client-side. The build output is a directory of plain HTML, CSS, and JS files that any web server can serve. No Node.js runtime needed in production.
+The whole thing runs on my Pi cluster with a CloudFront CDN in front. The frontend is a multi-stage Docker image — SvelteKit builds the static site in stage one, then the output drops into Nginx Alpine. SvelteKit's `adapter-static` generates pre-compressed `.br` and `.gz` files at build time, and Nginx serves them directly with `gzip_static on` — zero CPU overhead for compression at request time.
 
-## Deployment: Pi Cluster with CloudFront
-
-The whole thing runs on my Pi cluster with a CloudFront CDN in front. The frontend is a multi-stage Docker image — SvelteKit builds the static site in stage one, then the output drops into Nginx Alpine. The final image is tiny.
-
-SvelteKit's `adapter-static` generates pre-compressed `.br` and `.gz` files at build time. Nginx serves these directly with `gzip_static on`, so there's zero CPU overhead for compression at request time.
-
-I offload compute to the WASM client: in the background, while someone is playing, it mines up to 10 of the harder difficulty puzzles. Some of these take exceedingly long to validate on iOS, so pre-mining them means play stays fast when those puzzles get served to the app.
+I offload compute to the WASM client: in the background, while someone is playing, it mines up to 10 of the harder difficulty puzzles. Some of these take exceedingly long to validate on iOS, so pre-mining them means play stays fast when those puzzles get served to the app. There's a leaderboard in there too.
 
 ## What It Became
 
-Ukodus is a fully integrated game system. The TUI, WASM, and iOS clients all look up generated puzzles, solve them with hints, and track everything — all tied back to the galaxy graph. There's a leaderboard in there too.
+Ukodus is a fully integrated game system. Three repos, three platforms, one engine. The TUI, WASM, and iOS clients all look up generated puzzles, solve them with hints, and track everything — all tied back to the galaxy graph.
 
 It's a Sudoku app that doesn't have ads, doesn't require a subscription, and teaches you actual solving techniques instead of just filling in answers. Which is all I wanted in the first place.
 
