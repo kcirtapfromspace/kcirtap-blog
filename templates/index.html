@@ -92,55 +92,6 @@
         flex-grow: 1;
     }
 
-    /* Sudoku embed */
-    .sudoku-embed {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 1.5rem;
-        border: 1px solid var(--border);
-        border-radius: 0.75rem;
-    }
-    .sudoku-controls {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-        justify-content: center;
-        margin-bottom: 1rem;
-    }
-    .sudoku-btn {
-        padding: 0.5rem 1rem;
-        font-size: 0.875rem;
-        font-family: inherit;
-        background: var(--bg);
-        color: var(--text);
-        border: 2px solid var(--border);
-        border-radius: 0.5rem;
-        cursor: pointer;
-        transition: all 150ms ease;
-    }
-    .sudoku-btn:hover {
-        border-color: var(--accent);
-        color: var(--accent);
-    }
-    #sudoku-canvas {
-        display: block;
-        border-radius: 0.5rem;
-    }
-    .sudoku-help {
-        margin-top: 0.75rem;
-        font-size: 0.75rem;
-        color: var(--muted);
-        text-align: center;
-    }
-    .sudoku-help kbd {
-        padding: 0.125rem 0.375rem;
-        background: var(--code-bg);
-        border: 1px solid var(--border);
-        border-radius: 0.25rem;
-        font-family: monospace;
-    }
-
 </style>
 {% endblock %}
 
@@ -162,7 +113,7 @@
             <p>Writing about software engineering, infrastructure, and whatever else catches my interest.</p>
         </div>
     </a>
-    <a href="#sudoku-section" class="feature-card">
+    <a href="/sudoku/" class="feature-card">
         <img src="/images/sudoku-preview.svg" alt="Sudoku puzzle preview" class="feature-card-preview">
         <div class="feature-card-body">
             <h3>Sudoku</h3>
@@ -219,87 +170,5 @@
     </ul>
 </div>
 {% endif %}
-
-<!-- Sudoku -->
-<div class="home-section" id="sudoku-section">
-    <div class="sudoku-embed">
-        <div class="sudoku-controls">
-            <select id="difficulty-select" class="sudoku-btn">
-                <option value="easy">Easy</option>
-                <option value="medium" selected>Medium</option>
-                <option value="hard">Hard</option>
-                <option value="expert">Expert</option>
-            </select>
-            <button id="new-game-btn" class="sudoku-btn">New Game</button>
-            <button id="theme-btn" class="sudoku-btn">Theme</button>
-        </div>
-        <canvas id="sudoku-canvas"></canvas>
-        <p class="sudoku-help">
-            <kbd>&#8593;&#8595;&#8592;&#8594;</kbd> or <kbd>HJKL</kbd> move &bull;
-            <kbd>1-9</kbd> fill &bull;
-            <kbd>Space</kbd> notes &bull;
-            <kbd>U</kbd> undo &bull;
-            <kbd>P</kbd> pause
-        </p>
-    </div>
-</div>
-
-
-<script type="module">
-    import init, { SudokuGame } from '/sudoku/sudoku_wasm.js';
-
-    let game = null;
-    const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    let currentTheme = darkQuery.matches ? 'dark' : 'light';
-
-    async function initSudoku() {
-        await init('/sudoku/sudoku_wasm_bg.wasm');
-
-        game = new SudokuGame('sudoku-canvas');
-        game.set_theme(currentTheme);
-        game.new_game(document.getElementById('difficulty-select').value);
-
-        function gameLoop() {
-            game.tick();
-            requestAnimationFrame(gameLoop);
-        }
-        gameLoop();
-
-        // Sync with system color scheme changes
-        darkQuery.addEventListener('change', (e) => {
-            currentTheme = e.matches ? 'dark' : 'light';
-            game.set_theme(currentTheme);
-        });
-
-        document.addEventListener('keydown', (event) => {
-            if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.tagName === 'SELECT') return;
-            game.handle_key(event);
-        });
-
-        document.getElementById('new-game-btn').addEventListener('click', () => {
-            game.new_game(document.getElementById('difficulty-select').value);
-        });
-
-        document.getElementById('difficulty-select').addEventListener('change', (e) => {
-            game.new_game(e.target.value);
-        });
-
-        document.getElementById('theme-btn').addEventListener('click', () => {
-            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            game.set_theme(currentTheme);
-        });
-
-        function resizeCanvas() {
-            const section = document.querySelector('.sudoku-embed');
-            const availableWidth = section.clientWidth - 48;
-            const size = Math.min(availableWidth, 500);
-            game.resize(size, size);
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-    }
-
-    initSudoku().catch(console.error);
-</script>
 
 {% endblock %}
