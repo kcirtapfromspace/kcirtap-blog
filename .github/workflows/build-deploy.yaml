@@ -91,6 +91,31 @@ jobs:
           echo "Content directory:"
           ls -la content/posts/
 
+      - name: Dedupe slug collisions
+        run: |
+          python3 - <<'PY'
+          import os, re
+          posts = 'content/posts'
+          kebab = re.compile(r'^[a-z0-9]+(?:-[a-z0-9]+)*\.md$')
+          def slug(name):
+              base = os.path.splitext(name)[0].lower()
+              return re.sub(r'[^a-z0-9]+', '-', base).strip('-')
+          seen = {}
+          for entry in sorted(os.listdir(posts)):
+              full = os.path.join(posts, entry)
+              if not (os.path.isfile(full) and entry.endswith('.md')):
+                  continue
+              s = slug(entry)
+              if s not in seen:
+                  seen[s] = entry
+                  continue
+              # Collision: prefer the already-kebab-cased file (less likely a stale rename).
+              kept, dropped = (seen[s], entry) if kebab.match(seen[s]) or not kebab.match(entry) else (entry, seen[s])
+              os.remove(os.path.join(posts, dropped))
+              seen[s] = kept
+              print(f"  Slug collision '{s}': kept {kept}, removed {dropped}")
+          PY
+
       - name: Convert frontmatter for Zola compatibility
         run: python3 scripts/convert_frontmatter.py content/posts
 
