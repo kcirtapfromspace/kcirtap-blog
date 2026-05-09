@@ -69,6 +69,13 @@ jobs:
                   if head -1 "${dir}index.md" | grep -q "^---"; then
                     cp -r "$dir" "content/posts/$dirname"
                     echo "Copied folder: $dirname"
+                    find "content/posts/$dirname" -mindepth 1 -name '*.md' ! -name 'index.md' -print0 |
+                      while IFS= read -r -d '' f; do
+                        if ! head -1 "$f" | grep -q "^---"; then
+                          echo "  Pruned (no frontmatter): ${f#content/posts/}"
+                          rm "$f"
+                        fi
+                      done
                   else
                     echo "Skipped folder (no frontmatter): $dirname"
                   fi
