@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: site
-          image: ghcr.io/kcirtapfromspace/kcirtap-blog:903109a
+          image: ghcr.io/kcirtapfromspace/kcirtap-blog:8442a4b
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
