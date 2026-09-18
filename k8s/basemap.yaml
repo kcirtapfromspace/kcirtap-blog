@@ -6,13 +6,23 @@
 # Cloudflare's `Referrer-Policy: same-origin`, which is exactly the unattributable
 # high-volume pattern the OSM Tile Usage Policy prohibits.
 #
-# The archive is a regional extract of the Protomaps daily planet build, covering
-# the receiver's 450 nm range ring (bbox -116,31.5,-94,48) at z0-11. ~141 MB.
+# Two archives, both extracts of the Protomaps daily planet build:
+#
+#   denver-z11.pmtiles  ~141 MB  bbox -116,31.5,-94,48 at z0-11 - the receiver's
+#                                450 nm range ring, in detail.
+#   world-z6.pmtiles     ~43 MB  the whole world at z0-6, so the map is never
+#                                blank wherever it opens or pans. readsb persists
+#                                the map view in IndexedDB, so existing visitors
+#                                keep whatever centre they last had - which for
+#                                the stock defaults was 45N 9E, northern Italy.
+#
 # Rebuild with:
 #   pmtiles extract https://build.protomaps.com/<YYYYMMDD>.pmtiles denver-z11.pmtiles \
 #     --bbox=-116,31.5,-94,48 --maxzoom=11
-# Then load it into the PVC:
-#   kubectl cp denver-z11.pmtiles kcirtap/<basemap-pod>:/data/denver-z11.pmtiles
+#   pmtiles extract https://build.protomaps.com/<YYYYMMDD>.pmtiles world-z6.pmtiles \
+#     --bbox=-180,-85,180,85 --maxzoom=6
+# Then load them into the PVC:
+#   kubectl cp <file>.pmtiles kcirtap/<basemap-pod>:/data/<file>.pmtiles -c nginx
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

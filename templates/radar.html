@@ -128,7 +128,10 @@
     // protomaps-leaflet v5 has no named themes: paintRules/labelRules take a
     // flavor object, so the palettes live here, tuned to keep aircraft markers
     // and trails the highest-contrast thing on the map.
-    var BASEMAP_URL = '/tiles/denver-z11.pmtiles';
+    // Two sources: a small worldwide archive so the map is never blank wherever it
+    // opens or pans, plus the detailed regional extract over the receiver's range.
+    var BASEMAP_WORLD = '/tiles/world-z6.pmtiles';
+    var BASEMAP_REGION = '/tiles/denver-z11.pmtiles';
     var ATTRIB = '<a href="https://protomaps.com">Protomaps</a> &copy; ' +
                  '<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
 
@@ -174,12 +177,27 @@
         roads_label_minor: '#7b818a', roads_label_minor_halo: '#ffffff'
     };
 
+    // paintRules/labelRules build rules for a single unnamed source, so tag a copy
+    // per source to drive both.
+    function forSource(rules, src) {
+        return rules.map(function (r) {
+            var copy = {};
+            for (var k in r) { copy[k] = r[k]; }
+            copy.dataSource = src;
+            return copy;
+        });
+    }
+
     function basemapLayer(flavor) {
+        var paint = protomapsL.paintRules(flavor);
+        var label = protomapsL.labelRules(flavor, 'en');
         return protomapsL.leafletLayer({
-            url: BASEMAP_URL,
-            paintRules: protomapsL.paintRules(flavor),
-            labelRules: protomapsL.labelRules(flavor, 'en'),
-            maxDataZoom: 11,
+            sources: {
+                world: { url: BASEMAP_WORLD, maxDataZoom: 6 },
+                region: { url: BASEMAP_REGION, maxDataZoom: 11 }
+            },
+            paintRules: forSource(paint, 'world').concat(forSource(paint, 'region')),
+            labelRules: forSource(label, 'world').concat(forSource(label, 'region')),
             attribution: ATTRIB
         });
     }
