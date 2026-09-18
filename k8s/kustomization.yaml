@@ -7,6 +7,7 @@ resources:
   - namespace.yaml
   - deployment.yaml
   - service.yaml
+  - basemap.yaml
   # - ingress.yaml        # Disabled - using Cloudflare Tunnel instead
   # - cloudflare-tunnel.yaml  # Tunnel managed by Helm chart (cloudflare-tunnel-remote) — config in Cloudflare dashboard
 

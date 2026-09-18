@@ -68,11 +68,12 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-rotatedmarker@0.2.0/leaflet.rotatedMarker.js"></script>
+<script src="https://unpkg.com/protomaps-leaflet@5.1.0/dist/protomaps-leaflet.js"></script>
 <script src="https://unpkg.com/pbf@3.2.1/dist/pbf.js"></script>
 <script>
 (function () {
-    var RX_LAT = 39.765004;
-    var RX_LON = -105.015555;
+    var RX_LAT = 39.77;
+    var RX_LON = -105.02;
     var POLL_MS = 5000;
     var STALE_MS = 60000;
     var TRAIL_MAX = 60;         // max positions per aircraft (~5 min at 5s poll)
@@ -117,14 +118,74 @@
 
     var darkMq = window.matchMedia('(prefers-color-scheme: dark)');
 
-    var darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd', maxZoom: 20
-    });
-    var lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd', maxZoom: 20
-    });
+    // Self-hosted Protomaps basemap, served by the in-cluster `basemap` deployment
+    // through nginx at /tiles/. Replaces CARTO here, and the OSM Foundation's
+    // donated tile servers on radar.kcirtap.io: a public, auto-refreshing radar
+    // page is heavy unattributed traffic under the OSM Tile Usage Policy, and
+    // Cloudflare's `Referrer-Policy: same-origin` stripped the Referer that would
+    // have identified us. Self-hosting drops the third-party dependency entirely.
+    //
+    // protomaps-leaflet v5 has no named themes: paintRules/labelRules take a
+    // flavor object, so the palettes live here, tuned to keep aircraft markers
+    // and trails the highest-contrast thing on the map.
+    var BASEMAP_URL = '/tiles/denver-z11.pmtiles';
+    var ATTRIB = '<a href="https://protomaps.com">Protomaps</a> &copy; ' +
+                 '<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+
+    var DARK_FLAVOR = {
+        earth: '#15181d', glacier: '#1d222a', water: '#0d1117',
+        sand: '#1c1f25', beach: '#1c1f25',
+        wood_a: '#161b18', wood_b: '#18201a', scrub_a: '#171b18', scrub_b: '#191e1a',
+        park_a: '#161d19', park_b: '#18211c',
+        buildings: '#20242b', industrial: '#1d2027', pedestrian: '#1b1f25',
+        pier: '#232830', railway: '#2a2f38', runway: '#39404b',
+        aerodrome: '#1a1e24', hospital: '#1e2128', school: '#1e2128', zoo: '#1b211c',
+        major: '#2c323c', boundaries: '#3c4450',
+        landcover: {
+            grassland: '#161c17', barren: '#1c1f24', urban_area: '#1b1f25',
+            farmland: '#171c18', wood: '#161b18', scrub: '#171b18',
+            glacier: '#1d222a', sand: '#1c1f25'
+        },
+        city_label: '#8b94a3', city_label_halo: '#0d1117',
+        state_label: '#6b7483', state_label_halo: '#0d1117',
+        country_label: '#9aa3b2', ocean_label: '#2f3a47',
+        roads_label_major: '#78818f', roads_label_major_halo: '#0d1117',
+        roads_label_minor: '#646d7a', roads_label_minor_halo: '#0d1117'
+    };
+
+    var LIGHT_FLAVOR = {
+        earth: '#f7f6f3', glacier: '#e8edf2', water: '#d4e2ee',
+        sand: '#f2efe6', beach: '#f5f0e2',
+        wood_a: '#e6ece1', wood_b: '#dfe8d9', scrub_a: '#e9ede2', scrub_b: '#e3e9dc',
+        park_a: '#e4efe2', park_b: '#dcebd9',
+        buildings: '#e6e3dd', industrial: '#eeeae2', pedestrian: '#eeebe5',
+        pier: '#e4e1db', railway: '#d8d4cc', runway: '#e0dcd4',
+        aerodrome: '#eceae4', hospital: '#f2e9e9', school: '#f1eee6', zoo: '#e8efe4',
+        major: '#ffffff', boundaries: '#a9aeb5',
+        landcover: {
+            grassland: '#e6ece1', barren: '#f0ede5', urban_area: '#eeebe5',
+            farmland: '#eaefe0', wood: '#e6ece1', scrub: '#e9ede2',
+            glacier: '#e8edf2', sand: '#f2efe6'
+        },
+        city_label: '#4a5058', city_label_halo: '#f7f6f3',
+        state_label: '#71777f', state_label_halo: '#f7f6f3',
+        country_label: '#3d434a', ocean_label: '#7d97ab',
+        roads_label_major: '#61676f', roads_label_major_halo: '#ffffff',
+        roads_label_minor: '#7b818a', roads_label_minor_halo: '#ffffff'
+    };
+
+    function basemapLayer(flavor) {
+        return protomapsL.leafletLayer({
+            url: BASEMAP_URL,
+            paintRules: protomapsL.paintRules(flavor),
+            labelRules: protomapsL.labelRules(flavor, 'en'),
+            maxDataZoom: 11,
+            attribution: ATTRIB
+        });
+    }
+
+    var darkTiles = basemapLayer(DARK_FLAVOR);
+    var lightTiles = basemapLayer(LIGHT_FLAVOR);
 
     var activeTiles = darkMq.matches ? darkTiles : lightTiles;
     var map = L.map('radar-map', { center: [RX_LAT, RX_LON], zoom: 9 });

@@ -1,0 +1,148 @@
+# Self-hosted Protomaps basemap.
+#
+# Replaces third-party tile providers (OSM Foundation's donated servers, CARTO)
+# for both kcirtap.io/radar and radar.kcirtap.io. Those were being hit from a
+# public, permanently-open radar page with the Referer header stripped by
+# Cloudflare's `Referrer-Policy: same-origin`, which is exactly the unattributable
+# high-volume pattern the OSM Tile Usage Policy prohibits.
+#
+# The archive is a regional extract of the Protomaps daily planet build, covering
+# the receiver's 450 nm range ring (bbox -116,31.5,-94,48) at z0-11. ~141 MB.
+# Rebuild with:
+#   pmtiles extract https://build.protomaps.com/<YYYYMMDD>.pmtiles denver-z11.pmtiles \
+#     --bbox=-116,31.5,-94,48 --maxzoom=11
+# Then load it into the PVC:
+#   kubectl cp denver-z11.pmtiles kcirtap/<basemap-pod>:/data/denver-z11.pmtiles
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: basemap-data
+  namespace: kcirtap
+  labels:
+    app.kubernetes.io/name: basemap
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: longhorn
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: basemap-nginx
+  namespace: kcirtap
+  labels:
+    app.kubernetes.io/name: basemap
+data:
+  default.conf: |
+    server {
+        listen 8080;
+        root /data;
+
+        # PMTiles is read over HTTP range requests, so the client needs both
+        # Accept-Ranges and the range/validator headers exposed through CORS.
+        # radar.kcirtap.io is a separate origin from kcirtap.io, hence the wildcard.
+        location / {
+            types { }
+            default_type application/octet-stream;
+
+            add_header Accept-Ranges bytes always;
+            add_header Access-Control-Allow-Origin "*" always;
+            add_header Access-Control-Allow-Methods "GET, HEAD, OPTIONS" always;
+            add_header Access-Control-Allow-Headers "Range, If-Match, If-None-Match" always;
+            add_header Access-Control-Expose-Headers "Content-Length, Content-Range, ETag, Accept-Ranges" always;
+            add_header Cache-Control "public, max-age=604800" always;
+
+            if ($request_method = OPTIONS) {
+                return 204;
+            }
+        }
+
+        location = /healthz {
+            access_log off;
+            add_header Content-Type text/plain;
+            return 200 'ok';
+        }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: basemap
+  namespace: kcirtap
+  labels:
+    app.kubernetes.io/name: basemap
+    app.kubernetes.io/component: tiles
+spec:
+  # Single replica: the PVC is ReadWriteOnce, and the radar's aircraft feed is
+  # already pinned to the RTL-SDR node, so this adds no new availability ceiling.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: basemap
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: basemap
+        app.kubernetes.io/component: tiles
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.29-alpine
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: conf
+              mountPath: /etc/nginx/conf.d
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "10m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: basemap-data
+        - name: conf
+          configMap:
+            name: basemap-nginx
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: basemap
+  namespace: kcirtap
+  labels:
+    app.kubernetes.io/name: basemap
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: basemap
