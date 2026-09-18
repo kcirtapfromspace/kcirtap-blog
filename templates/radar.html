@@ -373,7 +373,10 @@
                 });
 
                 // Stats
-                var rate = '\u2014';
+                // Literal em dash, not '\u2014': the build minifier re-escapes the
+                // backslash in that sequence and the page renders the six characters
+                // "\u2014" instead of the dash.
+                var rate = '—';
                 if (prevMsg != null && prevNow != null) {
                     var dt = (data.now - prevNow) / 1000;
                     if (dt > 0) rate = Math.round((data.messages - prevMsg) / dt);
