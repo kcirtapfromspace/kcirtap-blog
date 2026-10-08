@@ -16,6 +16,7 @@ I'm a software engineer who enjoys building things, breaking things, and occasio
 
 You can find me on various platforms:
 
+- [Resume](https://resume.kcirtap.io/)
 - [GitHub](https://github.com/kcirtapfromspace)
 - [LinkedIn](https://linkedin.com/in/patrickdeutsch)
 - [Mastodon](https://data-folks.masto.host/@kcirtapfromspace)

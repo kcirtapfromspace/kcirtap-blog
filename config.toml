@@ -42,6 +42,9 @@ mastodon = "https://data-folks.masto.host/@kcirtapfromspace"
 twitter = "https://twitter.com/kcirtapfromspace"
 kofi = "https://ko-fi.com/kcirtapfromspace"
 
+# Resume page (content/resume.md) is also served at this host; see nginx.conf
+resume_url = "https://resume.kcirtap.io/"
+
 # Content settings
 posts_per_page = 10
 reading_speed = 200  # words per minute for reading time calculation

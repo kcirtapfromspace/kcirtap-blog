@@ -18,3 +18,7 @@ _obsidian-clone/
 .playwright-mcp/console-2026-02-04T04-17-31-206Z.log
 .playwright-mcp/console-2026-02-04T04-18-52-954Z.log
 .playwright-mcp/console-2026-02-04T04-31-37-469Z.log
+
+# Resume data synced from the private job-search repo at build time (contains contact details)
+resume.yaml
+static/resume/

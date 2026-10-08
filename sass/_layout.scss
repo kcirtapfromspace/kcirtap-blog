@@ -27,6 +27,24 @@
     align-items: center;
     justify-content: space-between;
   }
+
+  // Phones: the nav no longer fits beside the title, so stack them
+  @media (max-width: $breakpoint-sm - 1px) {
+    height: auto;
+
+    .container {
+      flex-wrap: wrap;
+      row-gap: $spacing-xs;
+      padding-top: $spacing-sm;
+      padding-bottom: $spacing-sm;
+    }
+
+    .nav {
+      width: 100%;
+      gap: 0;
+      justify-content: space-between;
+    }
+  }
 }
 
 .site-title {
