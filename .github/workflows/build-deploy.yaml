@@ -13,13 +13,54 @@ on:
         description: 'Purge Cloudflare cache'
         type: boolean
         default: true
+  # Safety net for the obsidian repository_dispatch, whose PAT keeps expiring:
+  # rebuild whenever the_archives/archives differs from what was last deployed.
+  schedule:
+    - cron: '*/30 * * * *'
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  # ─────────────────────────────────────────────────────────────
+  # SCHEDULED RUNS: SKIP UNLESS POSTS CHANGED
+  # ─────────────────────────────────────────────────────────────
+  check:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.compare.outputs.changed }}
+    steps:
+      - name: Checkout blog repo
+        uses: actions/checkout@v4
+
+      - name: Fetch blog posts from obsidian
+        uses: actions/checkout@v4
+        with:
+          repository: kcirtapfromspace/obsidian
+          path: _obsidian
+          token: ${{ secrets.OBSIDIAN_REPO_TOKEN }}
+          sparse-checkout: |
+            the_archives/archives
+
+      - name: Compare with last deployed posts
+        id: compare
+        run: |
+          current=$(git -C _obsidian rev-parse HEAD:the_archives/archives)
+          deployed=$(cat .obsidian-archives-sha 2>/dev/null || echo none)
+          echo "current:  $current"
+          echo "deployed: $deployed"
+          if [ "$current" = "$deployed" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
+    needs: check
+    # check only runs on schedule; !cancelled() keeps build running when check is skipped.
+    if: ${{ !cancelled() && (github.event_name != 'schedule' || needs.check.outputs.changed == 'true') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -41,6 +82,9 @@ jobs:
           token: ${{ secrets.OBSIDIAN_REPO_TOKEN }}
           sparse-checkout: |
             the_archives/archives
+
+      - name: Record deployed posts version
+        run: git -C _obsidian rev-parse HEAD:the_archives/archives > .obsidian-archives-sha
 
       - name: Sync blog posts
         run: |
@@ -71,7 +115,11 @@ jobs:
                     echo "Copied folder: $dirname"
                     find "content/posts/$dirname" -mindepth 1 -name '*.md' ! -name 'index.md' -print0 |
                       while IFS= read -r -d '' f; do
-                        if ! head -1 "$f" | grep -q "^---"; then
+                        # Excalidraw sources have frontmatter but would publish as pages of raw JSON.
+                        if [[ "$f" == *.excalidraw.md ]]; then
+                          echo "  Pruned (excalidraw source): ${f#content/posts/}"
+                          rm "$f"
+                        elif ! head -1 "$f" | grep -q "^---"; then
                           echo "  Pruned (no frontmatter): ${f#content/posts/}"
                           rm "$f"
                         fi
@@ -225,7 +273,7 @@ jobs:
           SHORT_SHA=$(echo "$COMMIT_SHA" | cut -c1-7)
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add k8s/deployment.yaml
+          git add k8s/deployment.yaml .obsidian-archives-sha
           git diff --staged --quiet || git commit -m "chore: update image to ${SHORT_SHA} [skip ci]"
           git push
 
