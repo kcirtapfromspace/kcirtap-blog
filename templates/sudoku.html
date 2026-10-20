@@ -78,14 +78,14 @@
 </div>
 
 <script type="module">
-    import init, { SudokuGame } from '/sudoku/sudoku_wasm.js';
+    import init, { SudokuGame } from '{{ get_url(path="sudoku/sudoku_wasm.js", cachebust=true) | safe }}';
 
     let game = null;
     const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
     let currentTheme = darkQuery.matches ? 'dark' : 'light';
 
     async function initSudoku() {
-        await init('/sudoku/sudoku_wasm_bg.wasm');
+        await init('{{ get_url(path="sudoku/sudoku_wasm_bg.wasm", cachebust=true) | safe }}');
 
         game = new SudokuGame('sudoku-canvas');
         game.set_theme(currentTheme);
