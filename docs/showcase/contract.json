@@ -1,0 +1,17 @@
+{
+  "task_id": "SHOWCASE-2026-001",
+  "audience": "Patrick Deutsch as blog owner and readers who want useful, demonstrated engineering work.",
+  "problem": "Related engineering changes lack a persistent path from real behavior to an accurate owner-approved blog release.",
+  "before": "Obsidian posts sync to Zola automatically. No feature contract, evidence binding, independent Jev review, private editorial queue, or signed showcase release exists.",
+  "after": "An internal tool groups changes by task, retains immutable evidence and reviews, and stages selected stories for an exact owner-signed release. Only public approved content reaches Zola.",
+  "requirements": [
+    {"id":"R1","behavior":"Independent frozen feature contract","action":"Register requirements before work and attach landed changes with the same task identity","expected":"Each requirement retains its original behavior, user action and result; legacy requirements require a verified owner signature."},
+    {"id":"R2","behavior":"Observable feature evidence","action":"Bind each requirement to commits, original media, an outcome, article section and inline figure","expected":"Missing, changed or contradictory evidence blocks selection; production, controlled demonstrations and research remain distinct."},
+    {"id":"R3","behavior":"Independent Jev judgments","action":"Review bounded complete source, then evidence and writing separately, then prominence","expected":"Original typed answers, distributions, confidence, model and hashes persist; feedback enters only prominence; failed transport and completed judgments remain in history."},
+    {"id":"R4","behavior":"Private owner queue","action":"Open the local queue and sign promote, lower, skip, reject, defer or a correction","expected":"Choices remain immutable; unselected work stays pending; changed feedback invalidates only ranking; decisions cannot waive evidence."},
+    {"id":"R5","behavior":"Controlled publication","action":"Prepare an exact blog commit, catalog and version, then have a person approve and sign a stable release","expected":"Unsigned candidates and prereleases cannot publish; historical stories remain; meaningful work remains open until its deployed blog release is verified."},
+    {"id":"R6","behavior":"Private data boundary","action":"Build the public site or inspect public output","expected":"No credentials, private review records, feedback, raw source review inputs or private repository identifiers enter the public output."}
+  ],
+  "freeze_rule": "This initial contract must be preserved after landing. Corrections add history and cannot remove original obligations.",
+  "status": "proposed; no landing or completion claimed"
+}

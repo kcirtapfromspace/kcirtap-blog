@@ -3,6 +3,7 @@ name: Build and Deploy
 on:
   push:
     branches: [main]
+    tags: ["showcase/v*"]
   pull_request:
     branches: [main]
   repository_dispatch:
@@ -17,6 +18,12 @@ on:
   # rebuild whenever the_archives/archives differs from what was last deployed.
   schedule:
     - cron: '*/30 * * * *'
+
+# Serialize publication so an older in-flight release cannot overwrite a newer
+# published catalog. PR validation uses an independent group.
+concurrency:
+  group: kcirtap-website-${{ github.event_name == 'pull_request' && github.ref || 'deployment' }}
+  cancel-in-progress: false
 
 env:
   REGISTRY: ghcr.io
@@ -203,6 +210,27 @@ jobs:
             cp _sudoku/crates/sudoku-wasm/www/pkg/*.js static/sudoku/ 2>/dev/null || true
           fi
 
+      # Only a verified, owner-signed stable showcase catalog enters Zola.
+      # Ordinary posts keep their existing publishing path.
+      - name: Materialize signed showcase stories
+        env:
+          SHOWCASE_RELEASE_SIGNERS: ${{ vars.SHOWCASE_RELEASE_SIGNERS }}
+        run: |
+          git fetch origin 'refs/tags/showcase/*:refs/tags/showcase/*'
+          if [ -n "$SHOWCASE_RELEASE_SIGNERS" ]; then
+            umask 077
+            export SHOWCASE_OWNER_SIGNERS="$RUNNER_TEMP/showcase-release-signers"
+            printf '%s\n' "$SHOWCASE_RELEASE_SIGNERS" > "$SHOWCASE_OWNER_SIGNERS"
+          fi
+          python3 -m showcase sync-public > showcase-release.json
+          if [[ "$GITHUB_REF" == refs/tags/showcase/v* && "$GITHUB_REF" != *-rc.* ]]; then
+            python3 - <<'PYVERIFY'
+          import json, os
+          selected = json.load(open('showcase-release.json'))
+          assert os.environ['GITHUB_REF'] == 'refs/tags/showcase/v' + selected['version'], 'Stale release tag cannot deploy'
+          PYVERIFY
+          fi
+
       # ─────────────────────────────────────────────────────────────
       # BUILD SITE
       # ─────────────────────────────────────────────────────────────
@@ -226,7 +254,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to Container Registry
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && !contains(github.ref, '-rc.')
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -247,7 +275,7 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
+          push: ${{ github.event_name != 'pull_request' && !contains(github.ref, '-rc.') }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
@@ -258,7 +286,7 @@ jobs:
       # ─────────────────────────────────────────────────────────────
 
       - name: Update deployment manifest
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         env:
           COMMIT_SHA: ${{ github.sha }}
         run: |
@@ -266,7 +294,7 @@ jobs:
           sed -i "s|image: ghcr.io/kcirtapfromspace/kcirtap-blog:.*|image: ghcr.io/kcirtapfromspace/kcirtap-blog:${SHORT_SHA}|g" k8s/deployment.yaml
 
       - name: Commit updated manifests
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         env:
           COMMIT_SHA: ${{ github.sha }}
         run: |
@@ -282,7 +310,7 @@ jobs:
       # ─────────────────────────────────────────────────────────────
 
       - name: Purge Cloudflare cache
-        if: github.event_name != 'pull_request' && (github.event.inputs.purge_cache == 'true' || github.event.inputs.purge_cache == null)
+        if: github.event_name != 'pull_request' && !contains(github.ref, '-rc.') && (github.event.inputs.purge_cache == 'true' || github.event.inputs.purge_cache == null)
         env:
           CF_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
           CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -293,3 +321,27 @@ jobs:
               -H "Content-Type: application/json" \
               --data '{"purge_everything":true}'
           fi
+
+  deploy-showcase-release:
+    # The build job has already verified the exact signed stable catalog.
+    # Preserve the existing GitOps manifest writer, from a main checkout.
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/showcase/v') && !contains(github.ref, '-rc.')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Point Argo CD at the verified stable release image
+        env:
+          RELEASE_COMMIT: ${{ github.sha }}
+        run: |
+          SHORT_SHA=$(echo "$RELEASE_COMMIT" | cut -c1-7)
+          sed -i "s|image: ghcr.io/kcirtapfromspace/kcirtap-blog:.*|image: ghcr.io/kcirtapfromspace/kcirtap-blog:${SHORT_SHA}|g" k8s/deployment.yaml
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add k8s/deployment.yaml
+          git diff --staged --quiet || git commit -m "chore: deploy signed showcase ${SHORT_SHA} [skip ci]"
+          git push origin HEAD:main

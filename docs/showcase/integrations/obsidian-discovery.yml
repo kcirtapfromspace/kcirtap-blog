@@ -1,0 +1,39 @@
+# Install in the PRIVATE Obsidian repository after reviewing and pinning the tool commit.
+# Use a dedicated, persistent private runner. Never run this job on pull_request.
+name: Private showcase discovery
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: private-showcase-ledger
+  cancel-in-progress: false
+jobs:
+  discover:
+    if: vars.SHOWCASE_TOOL_COMMIT != ''
+    runs-on: [self-hosted, showcase-private]
+    environment: showcase-internal
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: kcirtapfromspace/kcirtap-blog
+          ref: ${{ vars.SHOWCASE_TOOL_COMMIT }}
+          persist-credentials: false
+      - name: Discover related work and retain launch obligations
+        env:
+          GH_TOKEN: ${{ secrets.SHOWCASE_SOURCE_READ_TOKEN }}
+          SHOWCASE_STATE: ${{ vars.SHOWCASE_STATE }}
+          SHOWCASE_SOURCE_REPOS: ${{ vars.SHOWCASE_SOURCE_REPOS }}
+        run: |
+          test -n "$SHOWCASE_STATE"
+          python3 - <<'PY'
+          import os
+          from showcase.store import Store
+          from showcase.github import discover
+          repos = os.environ['SHOWCASE_SOURCE_REPOS'].split()
+          assert repos, 'Configure explicit source repositories'
+          discover(Store(os.environ['SHOWCASE_STATE']), repos)
+          PY
+      # No upload-artifact, cache, logs of records, model key, or public write scope.

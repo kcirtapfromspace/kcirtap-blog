@@ -22,3 +22,12 @@ _obsidian-clone/
 # Resume data synced from the private job-search repo at build time (contains contact details)
 resume.yaml
 static/resume/
+
+# Internal editorial data is stored outside all Git trees. Defense in depth.
+.env
+.env.*
+__pycache__/
+*.pyc
+.showcase-private/
+showcase-state/
+content/showcase/*/

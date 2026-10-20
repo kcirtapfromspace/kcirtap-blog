@@ -1,0 +1,6 @@
+{% extends "page.html" %}
+{% block head_extra %}
+{% set release = load_data(path="showcase-release.json") %}
+<meta name="showcase-blog-commit" content="{{ release.blog_commit | default(value='preview') }}">
+<meta name="showcase-catalog-hash" content="{{ release.catalog_hash }}">
+{% endblock %}

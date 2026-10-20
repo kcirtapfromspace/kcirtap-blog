@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "model": "jev-1.13.0",
+  "endpoint": "https://api.typesafe.ai/v1/systemone",
+  "mode": "proposed",
+  "thresholds": {"scope": 0.85, "evidence": 0.85, "writing": 0.85, "ranking": 0.85},
+  "minimum_validation_examples_per_stage": 12,
+  "minimum_validation_accuracy": 0.9,
+  "note": "Proposed confidence floors. No hard enforcement or publication until owner-labeled held-out examples validate this exact policy. Do not lower these floors to pass a story."
+}

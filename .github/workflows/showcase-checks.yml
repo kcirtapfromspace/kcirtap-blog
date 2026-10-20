@@ -1,0 +1,26 @@
+name: Showcase infrastructure checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python3 -m unittest discover -s tests -v
+      - name: Preserve the landed initial contract
+        run: |
+          if git cat-file -e origin/main:docs/showcase/contract.json 2>/dev/null; then
+            git show origin/main:docs/showcase/contract.json > /tmp/initial-contract.json
+            cmp /tmp/initial-contract.json docs/showcase/contract.json
+          fi
+      - name: Verify unsigned public state stays empty
+        run: python3 -m showcase sync-public
